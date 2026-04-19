@@ -14,53 +14,54 @@
 
 ```
 memo-builder/
-├── app/
-│   ├── (auth)/login/page.tsx                  # Login page
-│   ├── (editor)/
-│   │   ├── page.tsx                           # Editor page (auth guard, server)
-│   │   └── EditorClient.tsx                   # Client-side editor shell
-│   ├── settings/page.tsx                      # Settings (data sources, webhooks)
-│   ├── preview/[templateId]/page.tsx          # Clean print/preview page
-│   └── api/
-│       ├── auth/[...nextauth]/route.ts        # NextAuth handler
-│       ├── templates/route.ts                 # GET all, POST create
-│       ├── templates/[id]/route.ts            # GET, PUT, DELETE
-│       ├── databases/route.ts                 # GET all, POST create
-│       ├── databases/[id]/route.ts            # DELETE
-│       ├── databases/[id]/schema/route.ts     # GET tables+fields
-│       ├── records/route.ts                   # GET records from user DB
-│       ├── export/route.ts                    # POST generate export
-│       ├── webhook/trigger/route.ts           # POST inbound webhook
-│       └── webhook/config/route.ts            # GET/POST webhook settings
-├── components/
-│   ├── editor/
-│   │   ├── Canvas.tsx                         # Fabric.js canvas wrapper
-│   │   ├── LeftToolbar.tsx                    # Tool buttons
-│   │   ├── RightPane.tsx                      # DB field browser + record selector
-│   │   ├── PropertiesBar.tsx                  # X/Y/W/H + font + grid controls
-│   │   ├── TopBar.tsx                         # App header + save/preview/export
-│   │   └── StatusBar.tsx                      # Page/zoom/grid info
-│   └── settings/
-│       ├── DataSourceForm.tsx                 # Add/remove DB connections
-│       └── WebhookConfigForm.tsx              # Inbound secret + outbound URL
-├── lib/
-│   ├── auth.ts                                # NextAuth config
-│   ├── prisma.ts                              # Prisma client singleton
-│   ├── encrypt.ts                             # AES-256-GCM encrypt/decrypt
-│   ├── canvas/
-│   │   ├── snap.ts                            # snapToGrid(value, gridSize)
-│   │   ├── elements.ts                        # addTextBox, addLine, addTable, etc.
-│   │   └── placeholders.ts                    # substitutePlaceholders, extractPlaceholders
-│   ├── export/
-│   │   ├── pdf.ts                             # generatePdf + canvasJsonToHtml
-│   │   ├── image.ts                           # dataUrlToBuffer
-│   │   └── word.ts                            # buildDocx + canvasJsonToDocElements
-│   ├── db/
-│   │   ├── introspect.ts                      # getTables(connectionUrl)
-│   │   └── records.ts                         # getRecords(connectionUrl, table)
-│   └── webhook/
-│       ├── outbound.ts                        # deliverWebhook(config, payload)
-│       └── verify.ts                          # verifyBearerToken(req, secret)
+├── src/
+│   ├── app/
+│   │   ├── (auth)/login/page.tsx                  # Login page
+│   │   ├── (editor)/
+│   │   │   ├── page.tsx                           # Editor page (auth guard, server)
+│   │   │   └── EditorClient.tsx                   # Client-side editor shell
+│   │   ├── settings/page.tsx                      # Settings (data sources, webhooks)
+│   │   ├── preview/[templateId]/page.tsx          # Clean print/preview page
+│   │   └── api/
+│   │       ├── auth/[...nextauth]/route.ts        # NextAuth handler
+│   │       ├── templates/route.ts                 # GET all, POST create
+│   │       ├── templates/[id]/route.ts            # GET, PUT, DELETE
+│   │       ├── databases/route.ts                 # GET all, POST create
+│   │       ├── databases/[id]/route.ts            # DELETE
+│   │       ├── databases/[id]/schema/route.ts     # GET tables+fields
+│   │       ├── records/route.ts                   # GET records from user DB
+│   │       ├── export/route.ts                    # POST generate export
+│   │       ├── webhook/trigger/route.ts           # POST inbound webhook
+│   │       └── webhook/config/route.ts            # GET/POST webhook settings
+│   ├── components/
+│   │   ├── editor/
+│   │   │   ├── Canvas.tsx                         # Fabric.js canvas wrapper
+│   │   │   ├── LeftToolbar.tsx                    # Tool buttons
+│   │   │   ├── RightPane.tsx                      # DB field browser + record selector
+│   │   │   ├── PropertiesBar.tsx                  # X/Y/W/H + font + grid controls
+│   │   │   ├── TopBar.tsx                         # App header + save/preview/export
+│   │   │   └── StatusBar.tsx                      # Page/zoom/grid info
+│   │   └── settings/
+│   │       ├── DataSourceForm.tsx                 # Add/remove DB connections
+│   │       └── WebhookConfigForm.tsx              # Inbound secret + outbound URL
+│   └── lib/
+│       ├── auth.ts                                # NextAuth config
+│       ├── prisma.ts                              # Prisma client singleton
+│       ├── encrypt.ts                             # AES-256-GCM encrypt/decrypt
+│       ├── canvas/
+│       │   ├── snap.ts                            # snapToGrid(value, gridSize)
+│       │   ├── elements.ts                        # addTextBox, addLine, addTable, etc.
+│       │   └── placeholders.ts                    # substitutePlaceholders, extractPlaceholders
+│       ├── export/
+│       │   ├── pdf.ts                             # generatePdf + canvasJsonToHtml
+│       │   ├── image.ts                           # dataUrlToBuffer
+│       │   └── word.ts                            # buildDocx + canvasJsonToDocElements
+│       ├── db/
+│       │   ├── introspect.ts                      # getTables(connectionUrl)
+│       │   └── records.ts                         # getRecords(connectionUrl, table)
+│       └── webhook/
+│           ├── outbound.ts                        # deliverWebhook(config, payload)
+│           └── verify.ts                          # verifyBearerToken(req, secret)
 ├── prisma/schema.prisma
 ├── middleware.ts
 └── __tests__/
@@ -81,7 +82,7 @@ memo-builder/
 **Files:**
 - Create: `package.json`, `tsconfig.json`, `tailwind.config.ts`, `next.config.ts`
 - Create: `.env.local`, `jest.config.ts`, `jest.setup.ts`
-- Create: `app/layout.tsx`, `app/globals.css`
+- Create: `src/app/layout.tsx`, `app/globals.css`
 
 - [ ] **Step 1: Scaffold Next.js project**
 
@@ -110,12 +111,12 @@ import type { Config } from 'jest'
 
 const config: Config = {
   testEnvironment: 'jsdom',
-  setupFilesAfterFramework: ['<rootDir>/jest.setup.ts'],
-  moduleNameMapper: { '^@/(.*)$': '<rootDir>/$1' },
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: { jsx: 'react-jsx' } }],
   },
-  testPathPattern: ['__tests__'],
+  testMatch: ['**/__tests__/**/*.{ts,tsx}'],
 }
 
 export default config
@@ -153,7 +154,7 @@ git commit -m "feat: bootstrap Next.js project with dependencies"
 
 **Files:**
 - Create: `prisma/schema.prisma`
-- Create: `lib/prisma.ts`
+- Create: `src/lib/prisma.ts`
 
 - [ ] **Step 1: Write prisma/schema.prisma**
 
@@ -241,10 +242,10 @@ git commit -m "feat: add Prisma schema and database migration"
 ### Task 3: Admin Auth + Encryption
 
 **Files:**
-- Create: `lib/auth.ts`
-- Create: `lib/encrypt.ts`
-- Create: `app/api/auth/[...nextauth]/route.ts`
-- Create: `app/(auth)/login/page.tsx`
+- Create: `src/lib/auth.ts`
+- Create: `src/lib/encrypt.ts`
+- Create: `src/app/api/auth/[...nextauth]/route.ts`
+- Create: `src/app/(auth)/login/page.tsx`
 - Create: `middleware.ts`
 
 - [ ] **Step 1: Generate password hash and encryption key, write to .env.local**
@@ -401,10 +402,10 @@ git commit -m "feat: add single-admin NextAuth authentication and AES-256 encryp
 ### Task 4: App Shell Layout
 
 **Files:**
-- Create: `components/editor/TopBar.tsx`
-- Create: `components/editor/StatusBar.tsx`
-- Create: `app/(editor)/page.tsx`
-- Create: `app/(editor)/EditorClient.tsx`
+- Create: `src/components/editor/TopBar.tsx`
+- Create: `src/components/editor/StatusBar.tsx`
+- Create: `src/app/(editor)/page.tsx`
+- Create: `src/app/(editor)/EditorClient.tsx`
 
 - [ ] **Step 1: Create components/editor/TopBar.tsx**
 
@@ -489,7 +490,7 @@ export default function StatusBar({
 
 ```tsx
 // app/(editor)/page.tsx
-import { auth } from '@/lib/auth'
+import from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import EditorClient from './EditorClient'
 
@@ -556,14 +557,14 @@ git commit -m "feat: add editor shell layout"
 ### Task 5: Fabric.js Canvas + Snap-to-Grid
 
 **Files:**
-- Create: `lib/canvas/snap.ts`
+- Create: `src/lib/canvas/snap.ts`
 - Create: `__tests__/lib/canvas/snap.test.ts`
-- Create: `components/editor/Canvas.tsx`
+- Create: `src/components/editor/Canvas.tsx`
 
 - [ ] **Step 1: Write __tests__/lib/canvas/snap.test.ts**
 
 ```typescript
-import { snapToGrid } from '@/lib/canvas/snap'
+import from '@/lib/canvas/snap'
 
 describe('snapToGrid', () => {
   it('snaps to nearest grid boundary', () => {
@@ -609,7 +610,7 @@ npx jest __tests__/lib/canvas/snap.test.ts
 'use client'
 import { useEffect, useRef } from 'react'
 import { Canvas as FabricCanvas, type FabricObject } from 'fabric'
-import { snapToGrid } from '@/lib/canvas/snap'
+import from '@/lib/canvas/snap'
 
 export const PAGE_WIDTH = 794
 export const PAGE_HEIGHT = 1123
@@ -724,8 +725,8 @@ git commit -m "feat: integrate Fabric.js canvas with snap-to-grid"
 ### Task 6: Canvas Elements (Draw Tools)
 
 **Files:**
-- Create: `lib/canvas/elements.ts`
-- Modify: `app/(editor)/EditorClient.tsx`
+- Create: `src/lib/canvas/elements.ts`
+- Modify: `src/app/(editor)/EditorClient.tsx`
 
 - [ ] **Step 1: Create lib/canvas/elements.ts**
 
@@ -816,7 +817,7 @@ export function addTable(canvas: FabricCanvas, x = 48, y = 48, cols = 3, rows = 
 
 ```tsx
 // In app/(editor)/EditorClient.tsx, add imports:
-import { addTextBox, addLine, addRect, addImagePlaceholder, addPageBreak, addTable } from '@/lib/canvas/elements'
+import from '@/lib/canvas/elements'
 
 // Add handler (inside EditorClient component):
 function handleCanvasToolClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -855,8 +856,8 @@ git commit -m "feat: add canvas element creation for all toolbar tools"
 ### Task 7: Left Toolbar
 
 **Files:**
-- Create: `components/editor/LeftToolbar.tsx`
-- Modify: `app/(editor)/EditorClient.tsx`
+- Create: `src/components/editor/LeftToolbar.tsx`
+- Modify: `src/app/(editor)/EditorClient.tsx`
 
 - [ ] **Step 1: Create components/editor/LeftToolbar.tsx**
 
@@ -979,8 +980,8 @@ git commit -m "feat: add left toolbar with tool selection and copy/cut/paste"
 ### Task 8: Properties Bar + Keyboard Shortcuts
 
 **Files:**
-- Create: `components/editor/PropertiesBar.tsx`
-- Modify: `app/(editor)/EditorClient.tsx`
+- Create: `src/components/editor/PropertiesBar.tsx`
+- Modify: `src/app/(editor)/EditorClient.tsx`
 
 - [ ] **Step 1: Create components/editor/PropertiesBar.tsx**
 
@@ -1080,13 +1081,13 @@ git commit -m "feat: add properties bar and keyboard shortcuts"
 ### Task 9: Placeholder Substitution Engine
 
 **Files:**
-- Create: `lib/canvas/placeholders.ts`
+- Create: `src/lib/canvas/placeholders.ts`
 - Create: `__tests__/lib/canvas/placeholders.test.ts`
 
 - [ ] **Step 1: Write __tests__/lib/canvas/placeholders.test.ts**
 
 ```typescript
-import { substitutePlaceholders, extractPlaceholders } from '@/lib/canvas/placeholders'
+import from '@/lib/canvas/placeholders'
 
 const sampleJson = {
   objects: [
@@ -1169,14 +1170,14 @@ git commit -m "feat: add placeholder substitution engine with tests"
 ### Task 10: Template CRUD API
 
 **Files:**
-- Create: `app/api/templates/route.ts`
-- Create: `app/api/templates/[id]/route.ts`
+- Create: `src/app/api/templates/route.ts`
+- Create: `src/app/api/templates/[id]/route.ts`
 - Create: `__tests__/api/templates.test.ts`
 
 - [ ] **Step 1: Write __tests__/api/templates.test.ts**
 
 ```typescript
-import { prisma } from '@/lib/prisma'
+import from '@/lib/prisma'
 import { GET, POST } from '@/app/api/templates/route'
 import { NextRequest } from 'next/server'
 
@@ -1228,8 +1229,8 @@ npx jest __tests__/api/templates.test.ts
 
 ```typescript
 // app/api/templates/route.ts
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import from '@/lib/auth'
+import from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET() {
@@ -1253,8 +1254,8 @@ export async function POST(req: NextRequest) {
 
 ```typescript
 // app/api/templates/[id]/route.ts
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import from '@/lib/auth'
+import from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
@@ -1296,12 +1297,12 @@ git commit -m "feat: add template CRUD API with tests"
 ### Task 11: Data Source API + Schema Introspection
 
 **Files:**
-- Create: `lib/db/introspect.ts`
-- Create: `lib/db/records.ts`
-- Create: `app/api/databases/route.ts`
-- Create: `app/api/databases/[id]/route.ts`
-- Create: `app/api/databases/[id]/schema/route.ts`
-- Create: `app/api/records/route.ts`
+- Create: `src/lib/db/introspect.ts`
+- Create: `src/lib/db/records.ts`
+- Create: `src/app/api/databases/route.ts`
+- Create: `src/app/api/databases/[id]/route.ts`
+- Create: `src/app/api/databases/[id]/schema/route.ts`
+- Create: `src/app/api/records/route.ts`
 
 - [ ] **Step 1: Implement lib/db/introspect.ts**
 
@@ -1360,9 +1361,9 @@ export async function getRecords(
 
 ```typescript
 // app/api/databases/route.ts
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { encrypt } from '@/lib/encrypt'
+import from '@/lib/auth'
+import from '@/lib/prisma'
+import from '@/lib/encrypt'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET() {
@@ -1385,8 +1386,8 @@ export async function POST(req: NextRequest) {
 
 ```typescript
 // app/api/databases/[id]/route.ts
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import from '@/lib/auth'
+import from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
@@ -1400,10 +1401,10 @@ export async function DELETE(_: NextRequest, { params }: { params: { id: string 
 
 ```typescript
 // app/api/databases/[id]/schema/route.ts
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { decrypt } from '@/lib/encrypt'
-import { getTables } from '@/lib/db/introspect'
+import from '@/lib/auth'
+import from '@/lib/prisma'
+import from '@/lib/encrypt'
+import from '@/lib/db/introspect'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
@@ -1418,10 +1419,10 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
 
 ```typescript
 // app/api/records/route.ts
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { decrypt } from '@/lib/encrypt'
-import { getRecords } from '@/lib/db/records'
+import from '@/lib/auth'
+import from '@/lib/prisma'
+import from '@/lib/encrypt'
+import from '@/lib/db/records'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(req: NextRequest) {
@@ -1447,8 +1448,8 @@ git commit -m "feat: add data source management and schema introspection API"
 ### Task 12: Right Pane Field Browser
 
 **Files:**
-- Create: `components/editor/RightPane.tsx`
-- Modify: `app/(editor)/EditorClient.tsx`
+- Create: `src/components/editor/RightPane.tsx`
+- Modify: `src/app/(editor)/EditorClient.tsx`
 
 - [ ] **Step 1: Create components/editor/RightPane.tsx**
 
@@ -1561,7 +1562,7 @@ export default function RightPane({ onFieldDrop, onRecordChange }: RightPaneProp
 ```tsx
 // In app/(editor)/EditorClient.tsx:
 import RightPane from '@/components/editor/RightPane'
-import { addTextBox } from '@/lib/canvas/elements'
+import from '@/lib/canvas/elements'
 import { type IText } from 'fabric'
 
 // Add state:
@@ -1596,7 +1597,7 @@ git commit -m "feat: add right pane field browser with drag-to-canvas support"
 ### Task 13: Save & Load Templates in Editor
 
 **Files:**
-- Modify: `app/(editor)/EditorClient.tsx`
+- Modify: `src/app/(editor)/EditorClient.tsx`
 
 - [ ] **Step 1: Add save and load logic to EditorClient**
 
@@ -1666,13 +1667,13 @@ git commit -m "feat: add template save and load in editor"
 ### Task 14: Word Export
 
 **Files:**
-- Create: `lib/export/word.ts`
+- Create: `src/lib/export/word.ts`
 - Create: `__tests__/lib/export/word.test.ts`
 
 - [ ] **Step 1: Write __tests__/lib/export/word.test.ts**
 
 ```typescript
-import { buildDocx, canvasJsonToDocElements } from '@/lib/export/word'
+import from '@/lib/export/word'
 
 describe('canvasJsonToDocElements', () => {
   it('extracts text elements from canvas JSON', () => {
@@ -1754,9 +1755,9 @@ git commit -m "feat: add Word export with tests"
 ### Task 15: PDF + Image Export + Export API
 
 **Files:**
-- Create: `lib/export/pdf.ts`
-- Create: `lib/export/image.ts`
-- Create: `app/api/export/route.ts`
+- Create: `src/lib/export/pdf.ts`
+- Create: `src/lib/export/image.ts`
+- Create: `src/app/api/export/route.ts`
 
 - [ ] **Step 1: Implement lib/export/pdf.ts**
 
@@ -1809,15 +1810,15 @@ export function dataUrlToBuffer(dataUrl: string): Buffer {
 
 ```typescript
 // app/api/export/route.ts
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { decrypt } from '@/lib/encrypt'
-import { getRecords } from '@/lib/db/records'
-import { substitutePlaceholders } from '@/lib/canvas/placeholders'
-import { generatePdf, canvasJsonToHtml } from '@/lib/export/pdf'
-import { dataUrlToBuffer } from '@/lib/export/image'
-import { buildDocx, canvasJsonToDocElements } from '@/lib/export/word'
-import { deliverWebhook } from '@/lib/webhook/outbound'
+import from '@/lib/auth'
+import from '@/lib/prisma'
+import from '@/lib/encrypt'
+import from '@/lib/db/records'
+import from '@/lib/canvas/placeholders'
+import from '@/lib/export/pdf'
+import from '@/lib/export/image'
+import from '@/lib/export/word'
+import from '@/lib/webhook/outbound'
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
@@ -1882,7 +1883,7 @@ export async function POST(req: NextRequest) {
 
 ```typescript
 // app/api/export/[filename]/route.ts
-import { auth } from '@/lib/auth'
+import from '@/lib/auth'
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
@@ -1946,8 +1947,8 @@ git commit -m "feat: add PDF, image, and Word export pipeline"
 ### Task 16: Print Preview Page
 
 **Files:**
-- Create: `app/preview/[templateId]/page.tsx`
-- Create: `app/preview/[templateId]/PreviewCanvas.tsx`
+- Create: `src/app/preview/[templateId]/page.tsx`
+- Create: `src/app/preview/[templateId]/PreviewCanvas.tsx`
 
 - [ ] **Step 1: Create app/preview/[templateId]/PreviewCanvas.tsx**
 
@@ -1978,9 +1979,9 @@ export default function PreviewCanvas({ canvasJson }: { canvasJson: object }) {
 
 ```tsx
 // app/preview/[templateId]/page.tsx
-import { auth } from '@/lib/auth'
+import from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
+import from '@/lib/prisma'
 import PreviewCanvas from './PreviewCanvas'
 
 export default async function PreviewPage({ params }: { params: { templateId: string } }) {
@@ -2039,9 +2040,9 @@ git commit -m "feat: add print preview page with window.print() support"
 ### Task 17: Webhook System
 
 **Files:**
-- Create: `lib/webhook/verify.ts`
-- Create: `lib/webhook/outbound.ts`
-- Create: `app/api/webhook/trigger/route.ts`
+- Create: `src/lib/webhook/verify.ts`
+- Create: `src/lib/webhook/outbound.ts`
+- Create: `src/app/api/webhook/trigger/route.ts`
 - Create: `__tests__/api/webhook-trigger.test.ts`
 
 - [ ] **Step 1: Write __tests__/api/webhook-trigger.test.ts**
@@ -2049,7 +2050,7 @@ git commit -m "feat: add print preview page with window.print() support"
 ```typescript
 import { POST } from '@/app/api/webhook/trigger/route'
 import { NextRequest } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import from '@/lib/prisma'
 
 jest.mock('@/lib/prisma', () => ({
   prisma: {
@@ -2138,14 +2139,14 @@ export async function deliverWebhook(
 
 ```typescript
 // app/api/webhook/trigger/route.ts
-import { prisma } from '@/lib/prisma'
-import { verifyBearerToken } from '@/lib/webhook/verify'
-import { decrypt } from '@/lib/encrypt'
-import { getRecords } from '@/lib/db/records'
-import { substitutePlaceholders } from '@/lib/canvas/placeholders'
-import { generatePdf, canvasJsonToHtml } from '@/lib/export/pdf'
-import { buildDocx, canvasJsonToDocElements } from '@/lib/export/word'
-import { deliverWebhook } from '@/lib/webhook/outbound'
+import from '@/lib/prisma'
+import from '@/lib/webhook/verify'
+import from '@/lib/encrypt'
+import from '@/lib/db/records'
+import from '@/lib/canvas/placeholders'
+import from '@/lib/export/pdf'
+import from '@/lib/export/word'
+import from '@/lib/webhook/outbound'
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs/promises'
 import path from 'path'
@@ -2220,10 +2221,10 @@ git commit -m "feat: add inbound webhook trigger and outbound HMAC-signed delive
 ### Task 18: Settings UI
 
 **Files:**
-- Create: `components/settings/DataSourceForm.tsx`
-- Create: `components/settings/WebhookConfigForm.tsx`
-- Create: `app/api/webhook/config/route.ts`
-- Create: `app/settings/page.tsx`
+- Create: `src/components/settings/DataSourceForm.tsx`
+- Create: `src/components/settings/WebhookConfigForm.tsx`
+- Create: `src/app/api/webhook/config/route.ts`
+- Create: `src/app/settings/page.tsx`
 
 - [ ] **Step 1: Create components/settings/DataSourceForm.tsx**
 
@@ -2343,8 +2344,8 @@ export default function WebhookConfigForm() {
 
 ```typescript
 // app/api/webhook/config/route.ts
-import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import from '@/lib/auth'
+import from '@/lib/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET() {
@@ -2380,7 +2381,7 @@ export async function POST(req: NextRequest) {
 
 ```tsx
 // app/settings/page.tsx
-import { auth } from '@/lib/auth'
+import from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import DataSourceForm from '@/components/settings/DataSourceForm'
 import WebhookConfigForm from '@/components/settings/WebhookConfigForm'
