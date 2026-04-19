@@ -13,11 +13,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         const email = credentials?.email as string
         const password = credentials?.password as string
-        if (
-          email !== process.env.ADMIN_EMAIL ||
-          !bcrypt.compareSync(password, process.env.ADMIN_PASSWORD_HASH ?? '')
-        ) return null
-        return { id: '1', email }
+        if (email !== process.env.ADMIN_EMAIL) return null
+        const ok = await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH ?? '')
+        return ok ? { id: '1', email } : null
       },
     }),
   ],
