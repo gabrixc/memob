@@ -1,0 +1,43 @@
+{
+  "name": "memo-builder",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.7.0",
+    "bcryptjs": "^3.0.3",
+    "docx": "^9.6.1",
+    "fabric": "^6.9.1",
+    "next": "14.2.35",
+    "next-auth": "^5.0.0-beta.31",
+    "pg": "^8.20.0",
+    "prisma": "^7.7.0",
+    "puppeteer": "^24.41.0",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.35",
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "ts-jest": "^29.4.9",
+    "typescript": "^5"
+  }
+}
