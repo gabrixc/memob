@@ -2039,6 +2039,12 @@ git commit -m "feat: add print preview page with window.print() support"
 
 ### Task 17: Webhook System
 
+> **NOTE:** Before implementing this task, update `middleware.ts` to exclude the inbound webhook endpoint from session auth. Change the matcher to:
+> ```typescript
+> matcher: ['/((?!api/auth|api/webhook/trigger|login|_next|favicon.ico).*)'],
+> ```
+> External callers authenticate via Bearer token, not browser session.
+
 **Files:**
 - Create: `src/lib/webhook/verify.ts`
 - Create: `src/lib/webhook/outbound.ts`
