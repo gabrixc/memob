@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Template {
+  id         String      @id @default(uuid())
+  name       String
+  canvasJson Json        @map("canvas_json")
+  pageSize   String      @default("A4") @map("page_size")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+  exportJobs ExportJob[]
+  @@map("templates")
+}
+
+model DataSource {
+  id            String   @id @default(uuid())
+  name          String
+  // stored AES-256-GCM encrypted — always use lib/encrypt.ts to read/write
+  connectionUrl String   @map("connection_url")
+  createdAt     DateTime @default(now()) @map("created_at")
+  @@map("data_sources")
+}
+
+model WebhookConfig {
+  id             String   @id @default(uuid())
+  inboundSecret  String   @map("inbound_secret")
+  outboundUrl    String?  @map("outbound_url")
+  outboundSecret String?  @map("outbound_secret")
+  outboundEvents String[] @map("outbound_events")
+  @@map("webhook_configs")
+}
+
+enum ExportFormat {
+  pdf
+  image
+  docx
+}
+
+enum ExportStatus {
+  pending
+  done
+  failed
+}
+
+model ExportJob {
+  id          String       @id @default(uuid())
+  templateId  String       @map("template_id")
+  template    Template     @relation(fields: [templateId], references: [id])
+  recordId    String       @map("record_id")
+  format      ExportFormat
+  status      ExportStatus @default(pending)
+  filePath    String?      @map("file_path")
+  triggeredBy String       @default("ui") @map("triggered_by")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  @@map("export_jobs")
+}
