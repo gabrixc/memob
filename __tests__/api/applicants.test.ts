@@ -31,7 +31,7 @@ const mockApplicant = {
 }
 
 describe('GET /api/applicants', () => {
-  it('returns all active applicants when no query', async () => {
+  it('returns all applicants when no query', async () => {
     ;(prisma.licenseApplicant.findMany as jest.Mock).mockResolvedValue([mockApplicant])
     const res = await GET(new NextRequest('http://localhost/api/applicants'))
     expect(res.status).toBe(200)
@@ -79,5 +79,25 @@ describe('PATCH /api/applicants/[id]', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.phoneNumber).toBe('0199999999')
+  })
+
+  it('returns 404 when applicant does not exist', async () => {
+    const p2025 = Object.assign(new Error('Not found'), { code: 'P2025' })
+    ;(prisma.licenseApplicant.update as jest.Mock).mockRejectedValue(p2025)
+    const req = new NextRequest('http://localhost', {
+      method: 'PATCH',
+      body: JSON.stringify({ phoneNumber: '0123' }),
+    })
+    const res = await PATCH(req, idParams)
+    expect(res.status).toBe(404)
+  })
+
+  it('returns 400 when no updatable fields provided', async () => {
+    const req = new NextRequest('http://localhost', {
+      method: 'PATCH',
+      body: JSON.stringify({}),
+    })
+    const res = await PATCH(req, idParams)
+    expect(res.status).toBe(400)
   })
 })
