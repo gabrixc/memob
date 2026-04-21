@@ -19,12 +19,25 @@ model Template {
 }
 
 model DataSource {
-  id            String   @id @default(uuid())
+  id            String       @id @default(uuid())
   name          String
   // stored AES-256-GCM encrypted — always use lib/encrypt.ts to read/write
-  connectionUrl String   @map("connection_url")
-  createdAt     DateTime @default(now()) @map("created_at")
+  connectionUrl String       @map("connection_url")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  savedQueries  SavedQuery[]
+
   @@map("data_sources")
+}
+
+model SavedQuery {
+  id           String     @id @default(uuid())
+  name         String
+  sql          String
+  dataSourceId String     @map("data_source_id")
+  dataSource   DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@map("saved_queries")
 }
 
 model WebhookConfig {
