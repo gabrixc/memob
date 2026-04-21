@@ -17,7 +17,7 @@ export default async function ApplicationsPage() {
           </div>
           <div className="flex items-center gap-3">
             <Link href="/applicants" className="text-sm text-slate-500 hover:text-slate-700">Pemohon</Link>
-            <a href="/" className="text-sm text-sky-600 hover:text-sky-700 font-medium">← Editor</a>
+            <Link href="/" className="text-sm text-sky-600 hover:text-sky-700 font-medium">← Editor</Link>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">

@@ -23,10 +23,10 @@ export default function ApplicationsClient() {
     if (status) params.set('status', status)
     if (type) params.set('type', type)
     setLoading(true)
-    fetch(`/api/applications?${params}`).then(r => r.json()).then(data => {
-      setApps(data)
-      setLoading(false)
-    })
+    fetch(`/api/applications?${params}`)
+      .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json() })
+      .then(data => { setApps(data); setLoading(false) })
+      .catch(() => { setApps([]); setLoading(false) })
   }, [status, type])
 
   return (
