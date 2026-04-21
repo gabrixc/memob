@@ -2,6 +2,7 @@
 import { prisma } from '@/lib/prisma'
 import { GET, POST } from '@/app/api/databases/[id]/queries/route'
 import { DELETE } from '@/app/api/databases/[id]/queries/[queryId]/route'
+import { POST as runQuery } from '@/app/api/databases/[id]/query/run/route'
 import { NextRequest } from 'next/server'
 
 jest.mock('@/lib/prisma', () => ({
@@ -16,6 +17,12 @@ jest.mock('@/lib/prisma', () => ({
 }))
 jest.mock('@/lib/auth', () => ({
   auth: jest.fn().mockResolvedValue({ user: { email: 'admin@memo.local' } }),
+}))
+jest.mock('@/lib/db/records', () => ({
+  runCustomQuery: jest.fn(),
+}))
+jest.mock('@/lib/encrypt', () => ({
+  decrypt: jest.fn((x: string) => x),
 }))
 
 const params = { params: { id: 'src1' } }
@@ -69,5 +76,39 @@ describe('DELETE /api/databases/[id]/queries/[queryId]', () => {
     const req = new NextRequest('http://localhost', { method: 'DELETE' })
     const res = await DELETE(req, queryParams)
     expect(res.status).toBe(204)
+  })
+})
+
+describe('POST /api/databases/[id]/query/run', () => {
+  it('executes the query and returns rows', async () => {
+    ;(prisma.dataSource.findUnique as jest.Mock).mockResolvedValue({
+      id: 'src1', connectionUrl: 'enc:pg://localhost/db'
+    })
+    const { runCustomQuery } = require('@/lib/db/records')
+    ;(runCustomQuery as jest.Mock).mockResolvedValue([{ col: 'val' }])
+
+    const req = new NextRequest('http://localhost', {
+      method: 'POST',
+      body: JSON.stringify({ sql: 'SELECT col FROM tbl' }),
+    })
+    const res = await runQuery(req, params)
+    expect(res.status).toBe(200)
+    const rows = await res.json()
+    expect(rows).toEqual([{ col: 'val' }])
+  })
+
+  it('returns 400 if query is not SELECT', async () => {
+    ;(prisma.dataSource.findUnique as jest.Mock).mockResolvedValue({
+      id: 'src1', connectionUrl: 'enc:pg://localhost/db'
+    })
+    const { runCustomQuery } = require('@/lib/db/records')
+    ;(runCustomQuery as jest.Mock).mockRejectedValue(new Error('Only SELECT queries are allowed'))
+
+    const req = new NextRequest('http://localhost', {
+      method: 'POST',
+      body: JSON.stringify({ sql: 'DROP TABLE users' }),
+    })
+    const res = await runQuery(req, params)
+    expect(res.status).toBe(400)
   })
 })
