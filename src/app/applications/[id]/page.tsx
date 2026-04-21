@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import ApplicationDetailClient from './ApplicationDetailClient'
 
+export const metadata = { title: 'Butiran Permohonan — Memo Builder' }
+
 export default async function ApplicationDetailPage({ params }: { params: { id: string } }) {
   if (!await auth()) redirect('/login')
   return (

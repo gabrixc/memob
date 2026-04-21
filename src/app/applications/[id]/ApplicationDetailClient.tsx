@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import StatusBadge from '@/components/applications/StatusBadge'
 
 interface Applicant {
@@ -54,6 +54,14 @@ function StageCard({
 }) {
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState<RemarkEvent>({ event: stage.key, ...(event ?? {}) })
+  const prevEvent = useRef(event)
+
+  useEffect(() => {
+    if (prevEvent.current !== event) {
+      prevEvent.current = event
+      setForm({ event: stage.key, ...(event ?? {}) })
+    }
+  }, [event, stage.key])
 
   function handleSave() {
     onSave(stage.key, form)
@@ -124,6 +132,7 @@ function StageCard({
 export default function ApplicationDetailClient({ id }: { id: string }) {
   const [app, setApp] = useState<Application | null>(null)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
   useEffect(() => {
     fetch(`/api/applications/${id}`).then(r => r.json()).then(setApp)
@@ -132,22 +141,29 @@ export default function ApplicationDetailClient({ id }: { id: string }) {
   async function handleStageSave(stageKey: string, data: RemarkEvent) {
     if (!app) return
     setSaving(true)
-    const updated = app.remarks.filter(r => r.event !== stageKey)
-    updated.push(data)
+    setSaveError('')
+    const updated = [...app.remarks.filter(r => r.event !== stageKey), data]
 
     const newStatus = stageKey === 'jkkn_meeting' && data.decision
       ? data.decision : app.status
 
-    const res = await fetch(`/api/applications/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ remarks: updated, status: newStatus }),
-    })
-    if (res.ok) {
-      const saved = await res.json()
-      setApp(saved)
+    try {
+      const res = await fetch(`/api/applications/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ remarks: updated, status: newStatus }),
+      })
+      if (res.ok) {
+        const saved = await res.json()
+        setApp(saved)
+      } else {
+        setSaveError('Gagal menyimpan. Sila cuba semula.')
+      }
+    } catch {
+      setSaveError('Gagal menyimpan. Sila cuba semula.')
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   if (!app) return <p className="text-slate-400 text-sm py-8 text-center">Memuatkan…</p>
@@ -171,6 +187,7 @@ export default function ApplicationDetailClient({ id }: { id: string }) {
         <div className="text-right">
           <StatusBadge status={app.status} />
           {saving && <p className="text-xs text-slate-400 mt-1">Menyimpan…</p>}
+          {saveError && <p className="text-xs text-red-500 mt-1">{saveError}</p>}
         </div>
       </div>
 
