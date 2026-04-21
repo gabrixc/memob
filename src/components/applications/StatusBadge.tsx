@@ -4,7 +4,7 @@ const COLOURS: Record<string, string> = {
   TIDAK_DISOKONG:    'bg-red-100 text-red-700',
   TANGGUH:           'bg-orange-100 text-orange-700',
   KIV:               'bg-yellow-100 text-yellow-700',
-  TIADA_KEPUTUSAN:   'bg-slate-100 text-slate-600',
+  TIADA_KEPUTUSAN:   'bg-gray-100 text-gray-600',
   TIDAK_DITERUSKAN:  'bg-slate-200 text-slate-500',
 }
 
