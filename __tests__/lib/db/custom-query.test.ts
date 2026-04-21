@@ -26,6 +26,8 @@ describe('runCustomQuery', () => {
     const rows = await runCustomQuery('postgresql://localhost/db', 'SELECT name, age FROM users')
     expect(rows).toEqual([{ name: 'Alice', age: '30' }])
     expect(mockClient.query).toHaveBeenCalledWith('SELECT name, age FROM users')
+    expect(mockClient.connect).toHaveBeenCalledTimes(1)
+    expect(mockClient.end).toHaveBeenCalledTimes(1)
   })
 
   it('throws if sql does not start with SELECT', async () => {
@@ -40,5 +42,20 @@ describe('runCustomQuery', () => {
     await expect(
       runCustomQuery('postgresql://localhost/db', 'select id from users')
     ).resolves.toBeDefined()
+  })
+
+  it('calls end even when query throws', async () => {
+    const mockClient = new Client()
+    mockClient.query.mockRejectedValue(new Error('db error'))
+    await expect(
+      runCustomQuery('postgresql://localhost/db', 'SELECT 1')
+    ).rejects.toThrow('db error')
+    expect(mockClient.end).toHaveBeenCalledTimes(1)
+  })
+
+  it('rejects queries with semicolons (multi-statement prevention)', async () => {
+    await expect(
+      runCustomQuery('postgresql://localhost/db', 'SELECT 1; DELETE FROM users')
+    ).rejects.toThrow('Only single SELECT statements are allowed')
   })
 })
