@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import type { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(req: NextRequest) {
@@ -7,7 +8,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status')
   const type = searchParams.get('type')
-  const where: Record<string, string> = {}
+  const where: Prisma.LicenseApplicationWhereInput = {}
   if (status) where.status = status
   if (type) where.entertainmentType = type
   const applications = await prisma.licenseApplication.findMany({

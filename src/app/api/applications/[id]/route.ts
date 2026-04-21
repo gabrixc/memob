@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
@@ -26,8 +27,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       include: { applicant: true },
     })
     return NextResponse.json(updated)
-  } catch (e: any) {
-    if (e?.code === 'P2025') return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025')
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
     throw e
   }
 }
@@ -37,8 +39,9 @@ export async function DELETE(_: NextRequest, { params }: { params: { id: string 
   try {
     await prisma.licenseApplication.delete({ where: { id: params.id } })
     return new NextResponse(null, { status: 204 })
-  } catch (e: any) {
-    if (e?.code === 'P2025') return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025')
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
     throw e
   }
 }
