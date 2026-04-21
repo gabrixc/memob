@@ -12,14 +12,16 @@ export default function ApplicantsClient() {
   const [applicants, setApplicants] = useState<Applicant[]>([])
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState('')
 
   useEffect(() => {
     const params = query ? `?q=${encodeURIComponent(query)}` : ''
     setLoading(true)
+    setFetchError('')
     fetch(`/api/applicants${params}`)
-      .then(r => r.ok ? r.json() : [])
+      .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json() })
       .then(data => { setApplicants(data); setLoading(false) })
-      .catch(() => setLoading(false))
+      .catch(() => { setFetchError('Gagal memuatkan senarai pemohon.'); setLoading(false) })
   }, [query])
 
   return (
@@ -34,6 +36,8 @@ export default function ApplicantsClient() {
       </div>
       {loading ? (
         <p className="text-slate-400 text-sm py-8 text-center">Memuatkan…</p>
+      ) : fetchError ? (
+        <p className="text-red-500 text-sm py-8 text-center">{fetchError}</p>
       ) : (
         <table className="w-full text-sm">
           <thead>
