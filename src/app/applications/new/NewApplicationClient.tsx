@@ -17,6 +17,7 @@ export default function NewApplicationClient() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Applicant[]>([])
   const [searching, setSearching] = useState(false)
+  const [searched, setSearched] = useState(false)
   const [selected, setSelected] = useState<Applicant | null>(null)
 
   // Step 2 fields
@@ -34,6 +35,7 @@ export default function NewApplicationClient() {
     const data = await fetch(`/api/applicants?q=${encodeURIComponent(query)}`).then(r => r.json())
     setResults(data)
     setSearching(false)
+    setSearched(true)
   }
 
   function selectApplicant(a: Applicant) {
@@ -119,7 +121,7 @@ export default function NewApplicationClient() {
           </tbody>
         </table>
       )}
-      {results.length === 0 && query && !searching && (
+      {searched && results.length === 0 && !searching && (
         <p className="text-slate-400 text-sm">Tiada rekod ditemui.</p>
       )}
     </div>
