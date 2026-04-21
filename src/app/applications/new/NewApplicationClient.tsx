@@ -32,10 +32,18 @@ export default function NewApplicationClient() {
   async function handleSearch() {
     if (!query.trim()) return
     setSearching(true)
-    const data = await fetch(`/api/applicants?q=${encodeURIComponent(query)}`).then(r => r.json())
-    setResults(data)
-    setSearching(false)
-    setSearched(true)
+    try {
+      const res = await fetch(`/api/applicants?q=${encodeURIComponent(query)}`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Carian gagal')
+      setResults(data)
+      setSearched(true)
+    } catch {
+      setResults([])
+      setSearched(true)
+    } finally {
+      setSearching(false)
+    }
   }
 
   function selectApplicant(a: Applicant) {
@@ -73,6 +81,7 @@ export default function NewApplicationClient() {
       return
     }
     const app = await res.json()
+    setSaving(false)
     router.push(`/applications/${app.id}`)
   }
 
