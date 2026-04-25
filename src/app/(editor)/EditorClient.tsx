@@ -172,13 +172,18 @@ export default function EditorClient() {
 
   // ── Table editor ────────────────────────────────────────────────────────────
   async function handleOpenTableEditor() {
-    const srcRes = await fetch('/api/databases')
-    if (srcRes.ok) setTableEditorSources(await srcRes.json())
-    if (activeSource) {
-      const schRes = await fetch(`/api/databases/${activeSource.sourceId}/schema`)
-      if (schRes.ok) setTableEditorSchema(await schRes.json())
+    try {
+      const srcRes = await fetch('/api/databases')
+      if (srcRes.ok) setTableEditorSources(await srcRes.json())
+      if (activeSource) {
+        const schRes = await fetch(`/api/databases/${activeSource.sourceId}/schema`)
+        if (schRes.ok) setTableEditorSchema(await schRes.json())
+      }
+      setShowTableEditor(true)
+    } catch (err) {
+      console.error('Failed to load table editor data', err)
+      setShowTableEditor(true) // still open modal, just with empty schema
     }
-    setShowTableEditor(true)
   }
 
   // ── Other editor actions ────────────────────────────────────────────────────
@@ -379,7 +384,6 @@ export default function EditorClient() {
         return (
           <TableEditorModal
             initialConfig={initialConfig}
-            sources={tableEditorSources}
             schema={tableEditorSchema}
             onSave={config => {
               const canvas = fabricRef.current

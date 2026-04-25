@@ -5,17 +5,15 @@ import type { TableConfig, TableBorderStyle } from '@/lib/canvas/tableConfig'
 
 interface Column { name: string; type: string }
 interface TableSchema { table: string; columns: Column[] }
-interface Source { id: string; name: string }
 
 interface TableEditorModalProps {
   initialConfig: TableConfig
-  sources:        Source[]
   schema:         TableSchema[]
   onSave:         (config: TableConfig) => void
   onClose:        () => void
 }
 
-export default function TableEditorModal({ initialConfig, sources, schema, onSave, onClose }: TableEditorModalProps) {
+export default function TableEditorModal({ initialConfig, schema, onSave, onClose }: TableEditorModalProps) {
   const [config, setConfig] = useState<TableConfig>(JSON.parse(JSON.stringify(initialConfig)))
   const allFields = schema.flatMap(t => t.columns.map(c => `{{${c.name}}}`))
 
@@ -33,19 +31,23 @@ export default function TableEditorModal({ initialConfig, sources, schema, onSav
     }))
   }
   function removeCol(col: number) {
-    if (config.cols <= 1) return
-    setConfig(p => ({
-      ...p, cols: p.cols - 1,
-      headers:  p.headers.filter((_, i) => i !== col),
-      cellData: p.cellData.map(r => r.filter((_, i) => i !== col)),
-    }))
+    setConfig(p => {
+      if (p.cols <= 1) return p
+      return {
+        ...p, cols: p.cols - 1,
+        headers:  p.headers.filter((_, i) => i !== col),
+        cellData: p.cellData.map(r => r.filter((_, i) => i !== col)),
+      }
+    })
   }
   function addRow() {
     setConfig(p => ({ ...p, rows: p.rows + 1, cellData: [...p.cellData, Array(p.cols).fill('')] }))
   }
   function removeRow(row: number) {
-    if (config.rows <= 1) return
-    setConfig(p => ({ ...p, rows: p.rows - 1, cellData: p.cellData.filter((_, i) => i !== row) }))
+    setConfig(p => {
+      if (p.rows <= 1) return p
+      return { ...p, rows: p.rows - 1, cellData: p.cellData.filter((_, i) => i !== row) }
+    })
   }
   function setBorder<K extends keyof TableBorderStyle>(key: K, val: TableBorderStyle[K]) {
     setConfig(p => ({ ...p, borderStyle: { ...p.borderStyle, [key]: val } }))

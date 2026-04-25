@@ -53,6 +53,7 @@ export function rebuildTableOnCanvas(
 ): Group {
   const newGroup = buildTableGroup(config)
   newGroup.set({ left: oldGroup.left ?? 0, top: oldGroup.top ?? 0 })
+  newGroup.setCoords()
   canvas.remove(oldGroup)
   canvas.add(newGroup)
   canvas.setActiveObject(newGroup)
