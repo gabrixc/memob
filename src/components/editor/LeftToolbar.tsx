@@ -1,15 +1,16 @@
 'use client'
 
-export type Tool = 'select' | 'text' | 'line' | 'table' | 'image' | 'rect' | 'pagebreak'
+export type Tool = 'select' | 'text' | 'line' | 'table' | 'image' | 'rect' | 'pagebreak' | 'paragraph'
 
 const TOOLS: { tool: Tool; icon: string; title: string }[] = [
-  { tool: 'select',    icon: '↖',  title: 'Select (V)' },
-  { tool: 'text',      icon: 'T',  title: 'Text Box (T)' },
-  { tool: 'line',      icon: '╱',  title: 'Line (L)' },
-  { tool: 'table',     icon: '⊞',  title: 'Table' },
-  { tool: 'image',     icon: '🖼',  title: 'Image Placeholder' },
-  { tool: 'rect',      icon: '▭',  title: 'Rectangle (R)' },
-  { tool: 'pagebreak', icon: '─',  title: 'Page Break' },
+  { tool: 'select',    icon: '↖', title: 'Select (V)' },
+  { tool: 'text',      icon: 'T', title: 'Text Box (T)' },
+  { tool: 'paragraph', icon: '¶', title: 'Paragraph Block' },
+  { tool: 'line',      icon: '╱', title: 'Line (L)' },
+  { tool: 'table',     icon: '⊞', title: 'Table' },
+  { tool: 'image',     icon: '🖼', title: 'Image Placeholder' },
+  { tool: 'rect',      icon: '▭', title: 'Rectangle (R)' },
+  { tool: 'pagebreak', icon: '─', title: 'Page Break' },
 ]
 
 interface LeftToolbarProps {

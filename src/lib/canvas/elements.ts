@@ -89,3 +89,21 @@ export function addTable(canvas: FabricCanvas, x = 48, y = 48, cols = 3, rows = 
   canvas.renderAll()
   return g
 }
+
+export function addParagraph(canvas: FabricCanvas, x = 48, y = 48) {
+  const obj = new Textbox('Enter paragraph text here...', {
+    left:       snapToGrid(x, G),
+    top:        snapToGrid(y, G),
+    width:      320,
+    fontSize:   13,
+    fontFamily: 'Inter, sans-serif',
+    fill:       '#1e293b',
+    textAlign:  'left',
+    lineHeight: 1.4,
+    data:       { type: 'paragraph', textTransform: 'none' },
+  })
+  canvas.add(obj)
+  canvas.setActiveObject(obj)
+  canvas.renderAll()
+  return obj
+}

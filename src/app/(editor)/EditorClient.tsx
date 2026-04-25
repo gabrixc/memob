@@ -10,7 +10,7 @@ const Canvas = dynamic(() => import('@/components/editor/Canvas'), { ssr: false 
 import LeftToolbar, { type Tool } from '@/components/editor/LeftToolbar'
 import PropertiesBar from '@/components/editor/PropertiesBar'
 import RightPane from '@/components/editor/RightPane'
-import { addTextBox, addLine, addRect, addImagePlaceholder, addPageBreak, addTable } from '@/lib/canvas/elements'
+import { addTextBox, addLine, addRect, addImagePlaceholder, addPageBreak, addTable, addParagraph } from '@/lib/canvas/elements'
 import type { HistoryControl } from '@/components/editor/Canvas'
 import TableEditorModal from '@/components/editor/TableEditorModal'
 import { rebuildTableOnCanvas } from '@/lib/canvas/tableBuilder'
@@ -251,6 +251,7 @@ export default function EditorClient() {
       case 'image':     addImagePlaceholder(canvas, x, y); break
       case 'pagebreak': addPageBreak(canvas, y); break
       case 'table':     addTable(canvas, x, y); break
+      case 'paragraph': addParagraph(canvas, x, y); break
     }
     setActiveTool('select')
   }

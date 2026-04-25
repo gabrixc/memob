@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FabricObject, Canvas as FabricCanvas, Group } from 'fabric'
 import { replaceWithImage } from '@/lib/canvas/elements'
 import { readFileAsDataURL } from '@/lib/canvas/imageUpload'
+import { applyTextTransform } from '@/lib/canvas/textTransform'
 
 interface PropertiesBarProps {
   selected:          FabricObject | null
@@ -62,9 +63,15 @@ export default function PropertiesBar({ selected, selectedObjs, canvas, gridSize
   const [textColor,  setTextColor]  = useState('#1e293b')
   const [fontSize,   setFontSize]   = useState(14)
 
+  // ── Paragraph state ──────────────────────────────────────────────────────────
+  const [textAlign,     setTextAlign]     = useState<string>('left')
+  const [textTransform, setTextTransform] = useState<string>('none')
+
   // Sync when selection changes
   useEffect(() => {
     setUploadError(null)
+    setTextAlign('left')
+    setTextTransform('none')
     if (isRect) {
       const obj = selected as RectLike
       const s = (obj.stroke as string) ?? '#94a3b8'
@@ -79,6 +86,16 @@ export default function PropertiesBar({ selected, selectedObjs, canvas, gridSize
       setLineHeight(obj.lineHeight ?? 1.16)
       setTextColor((obj.fill as string) ?? '#1e293b')
       setFontSize(obj.fontSize ?? 14)
+    }
+    if (isParagraph) {
+      const obj = selected as FabricObject & { fontWeight?: string; fontStyle?: string; lineHeight?: number; fill?: string; fontSize?: number; textAlign?: string; data?: { textTransform?: string } }
+      setBold(obj.fontWeight === 'bold')
+      setItalic(obj.fontStyle === 'italic')
+      setLineHeight(obj.lineHeight ?? 1.4)
+      setTextColor((obj.fill as string) ?? '#1e293b')
+      setFontSize(obj.fontSize ?? 13)
+      setTextAlign(obj.textAlign ?? 'left')
+      setTextTransform(obj.data?.textTransform ?? 'none')
     }
   }, [selected])
 
@@ -119,6 +136,24 @@ export default function PropertiesBar({ selected, selectedObjs, canvas, gridSize
   }
   function handleFontSize(s: number) {
     setFontSize(s); applyText({ fontSize: s })
+  }
+
+  // ── Paragraph helpers ─────────────────────────────────────────────────────
+  function handleTextAlign(align: string) {
+    setTextAlign(align)
+    ;(selected as FabricObject).set({ textAlign: align } as Parameters<FabricObject['set']>[0])
+    onUpdate?.()
+  }
+
+  function handleTextTransform(transform: string) {
+    setTextTransform(transform)
+    const obj = selected as FabricObject & { text?: string; data?: { type?: string; textTransform?: string } }
+    const transformed = applyTextTransform(obj.text ?? '', transform)
+    obj.set({
+      text: transformed,
+      data: { ...obj.data, type: 'paragraph', textTransform: transform },
+    } as Parameters<FabricObject['set']>[0])
+    onUpdate?.()
   }
 
   const btnBase  = 'w-6 h-6 flex items-center justify-center rounded text-sm shrink-0'
@@ -229,6 +264,46 @@ export default function PropertiesBar({ selected, selectedObjs, canvas, gridSize
             <input type="color" value={textColor} onChange={e => handleTextColor(e.target.value)}
               className="w-6 h-5 rounded border border-slate-300 cursor-pointer p-0" />
           </label>
+        </>
+      )}
+
+      {/* ── Paragraph controls ─────────────────────────────────────────────── */}
+      {isParagraph && (
+        <>
+          <div className="w-px h-4 bg-slate-300 shrink-0" />
+          <label className="flex items-center gap-1 shrink-0">
+            Size:
+            <input type="number" min={6} max={200} value={fontSize}
+              onChange={e => handleFontSize(Math.max(6, Number(e.target.value)))}
+              className={`${numInput} w-14`} />
+          </label>
+          <button onClick={handleBold}   className={`${btnBase} font-bold ${bold   ? btnOn : btnOff}`}>B</button>
+          <button onClick={handleItalic} className={`${btnBase} italic   ${italic  ? btnOn : btnOff}`}>I</button>
+          <label className="flex items-center gap-1 shrink-0">
+            Line ↕:
+            <input type="number" min={0.8} max={4} step={0.1} value={lineHeight}
+              onChange={e => handleLineHeight(Math.max(0.8, Number(Number(e.target.value).toFixed(1))))}
+              className={`${numInput} w-14`} />
+          </label>
+          <label className="flex items-center gap-1 shrink-0 cursor-pointer">
+            Colour:
+            <input type="color" value={textColor} onChange={e => handleTextColor(e.target.value)}
+              className="w-6 h-5 rounded border border-slate-300 cursor-pointer p-0" />
+          </label>
+          <div className="w-px h-4 bg-slate-300 shrink-0" />
+          {(['left','center','right','justify'] as const).map(a => (
+            <button key={a} title={`Align ${a}`} onClick={() => handleTextAlign(a)}
+              className={`${btnBase} text-[10px] ${textAlign === a ? btnOn : btnOff}`}>
+              {a === 'left' ? '≡L' : a === 'center' ? '≡C' : a === 'right' ? '≡R' : '≡'}
+            </button>
+          ))}
+          <div className="w-px h-4 bg-slate-300 shrink-0" />
+          {([['upper','AA'],['lower','aa'],['title','Aa']] as [string,string][]).map(([t, label]) => (
+            <button key={t} title={t} onClick={() => handleTextTransform(t)}
+              className={`${btnBase} ${textTransform === t ? btnOn : btnOff}`}>
+              {label}
+            </button>
+          ))}
         </>
       )}
 
