@@ -31,16 +31,19 @@ export default function PropertiesBar({ selected, selectedObjs, canvas, gridSize
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   async function handleImageFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file || !canvas || !selected) return
+    setUploadError(null)
     setUploading(true)
     try {
       const dataUrl = await readFileAsDataURL(file)
       await replaceWithImage(canvas, selected as Group, dataUrl)
     } catch (err) {
       console.error('Image upload failed', err)
+      setUploadError('Upload failed. Please try again.')
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -142,6 +145,9 @@ export default function PropertiesBar({ selected, selectedObjs, canvas, gridSize
           >
             {uploading ? 'Uploading…' : 'Upload Image'}
           </button>
+          {uploadError && (
+            <span className="text-red-500 text-xs shrink-0">{uploadError}</span>
+          )}
         </>
       )}
 

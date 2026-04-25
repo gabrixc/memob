@@ -71,6 +71,7 @@ export async function replaceWithImage(
     scaleY: ph / (img.height ?? ph),
     data:   { type: 'embeddedImage' },
   })
+  img.setCoords()
   canvas.remove(placeholder)
   canvas.add(img)
   canvas.setActiveObject(img)
