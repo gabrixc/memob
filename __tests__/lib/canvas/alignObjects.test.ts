@@ -18,6 +18,9 @@ describe('computeBoundingBox', () => {
     const bb = computeBoundingBox([{ left: 5, top: 15, width: 100, height: 50 }])
     expect(bb).toEqual({ left: 5, top: 15, width: 100, height: 50 })
   })
+  it('throws for empty array', () => {
+    expect(() => computeBoundingBox([])).toThrow('computeBoundingBox requires at least one object')
+  })
 })
 
 describe('computeAlignedPosition', () => {

@@ -23,14 +23,14 @@ type TextLike  = FabricObject & {
 }
 
 export default function PropertiesBar({ selected, selectedObjs, canvas, gridSize, onGridSizeChange, onUpdate, onEditTable }: PropertiesBarProps) {
-  const isRect = selected?.type === 'rect'
-  const isText = selected?.type === 'i-text' || selected?.type === 'text'
+  const isMultiSelect = selectedObjs.length > 1
+  const isRect      = !isMultiSelect && selected?.type === 'rect'
+  const isText      = !isMultiSelect && (selected?.type === 'i-text' || selected?.type === 'text')
 
   const dataType    = (selected as (FabricObject & { data?: { type?: string } }) | null)?.data?.type
-  const isImgHolder   = selected?.type === 'group' && dataType === 'imagePlaceholder'
-  const isTable       = selected?.type === 'group' && dataType === 'table'
-  const isParagraph   = selected?.type === 'textbox'
-  const isMultiSelect = selectedObjs.length > 1
+  const isImgHolder   = !isMultiSelect && selected?.type === 'group' && dataType === 'imagePlaceholder'
+  const isTable       = !isMultiSelect && selected?.type === 'group' && dataType === 'table'
+  const isParagraph   = !isMultiSelect && selected?.type === 'textbox'
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
@@ -184,6 +184,7 @@ export default function PropertiesBar({ selected, selectedObjs, canvas, gridSize
       obj.set(result as Parameters<typeof obj.set>[0])
       obj.setCoords()
     })
+    canvas.getActiveObject()?.setCoords()
     canvas.renderAll()
   }
 

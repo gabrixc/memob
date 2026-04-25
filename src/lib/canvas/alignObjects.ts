@@ -10,6 +10,7 @@ export interface ObjectBounds {
 export interface AlignResult { left?: number; top?: number }
 
 export function computeBoundingBox(objects: ObjectBounds[]): ObjectBounds {
+  if (objects.length === 0) throw new Error('computeBoundingBox requires at least one object')
   const minLeft   = Math.min(...objects.map(o => o.left))
   const minTop    = Math.min(...objects.map(o => o.top))
   const maxRight  = Math.max(...objects.map(o => o.left + o.width))
