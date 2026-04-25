@@ -85,7 +85,8 @@ export default function EditorClient() {
     if (!canvas) return
     // Flush current canvas state into pages array before saving
     const allPages = [...pagesRef.current]
-    allPages[currentPage] = canvas.toJSON()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    allPages[currentPage] = (canvas as any).toJSON(['data'])
     setPages(allPages)
     const canvasJson = { pages: allPages }
 
@@ -113,7 +114,8 @@ export default function EditorClient() {
     if (!canvas) return
     // Save current page
     const allPages = [...pagesRef.current]
-    allPages[currentPage] = canvas.toJSON()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    allPages[currentPage] = (canvas as any).toJSON(['data'])
     setPages(allPages)
     setCurrentPage(target)
     // Load target page
@@ -127,7 +129,8 @@ export default function EditorClient() {
     const canvas = fabricRef.current
     if (!canvas) return
     const allPages = [...pagesRef.current]
-    allPages[currentPage] = canvas.toJSON()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    allPages[currentPage] = (canvas as any).toJSON(['data'])
     const copy = JSON.parse(JSON.stringify(allPages[currentPage])) // deep clone
     allPages.push(copy)
     setPages(allPages)
@@ -143,7 +146,8 @@ export default function EditorClient() {
     const canvas = fabricRef.current
     if (!canvas) return
     const allPages = [...pagesRef.current]
-    allPages[currentPage] = canvas.toJSON()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    allPages[currentPage] = (canvas as any).toJSON(['data'])
     const blank = { version: '6.0.0', objects: [], background: '#ffffff' }
     allPages.push(blank)
     setPages(allPages)
