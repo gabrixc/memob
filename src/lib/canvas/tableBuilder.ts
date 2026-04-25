@@ -85,9 +85,23 @@ export function buildTableGroup(config: TableConfig): Group {
     }
   }
 
-  return new Group(objects, {
-    data: { type: 'table', cols, rows, config },
-  } as unknown as ConstructorParameters<typeof Group>[1])
+  const tableData = { type: 'table' as const, cols, rows, config }
+
+  // Build group without relying on constructor to set data
+  const group = new Group(objects, {} as unknown as ConstructorParameters<typeof Group>[1])
+
+  // Explicitly set data so PropertiesBar can detect the table type
+  ;(group as unknown as { data: typeof tableData }).data = tableData
+
+  // Override toObject so data is ALWAYS included in canvas serialization
+  // regardless of whether toJSON(['data']) is called — survives save/reload cycles
+  const _toObject = group.toObject.bind(group)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  group.toObject = function (propertiesToInclude?: any) {
+    return { ..._toObject(propertiesToInclude), data: tableData }
+  } as typeof group.toObject
+
+  return group
 }
 
 export function rebuildTableOnCanvas(
