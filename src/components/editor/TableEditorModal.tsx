@@ -1,7 +1,7 @@
 // src/components/editor/TableEditorModal.tsx
 'use client'
 import { useState, useEffect } from 'react'
-import type { TableConfig, TableBorderStyle } from '@/lib/canvas/tableConfig'
+import type { TableConfig, TableBorderStyle, CellStyle } from '@/lib/canvas/tableConfig'
 
 interface Column { name: string; type: string }
 interface TableSchema { table: string; columns: Column[] }
@@ -21,6 +21,13 @@ const inputStyle: React.CSSProperties = {
   border: '1px solid #cbd5e1',
   borderRadius: '4px',
   padding: '4px 8px',
+}
+
+function applyDisplayTransform(text: string, transform?: CellStyle['textTransform']): string {
+  if (!transform || transform === 'none') return text
+  if (transform === 'uppercase') return text.toUpperCase()
+  if (transform === 'lowercase') return text.toLowerCase()
+  return text.replace(/\b\w/g, c => c.toUpperCase())
 }
 
 export default function TableEditorModal({ initialConfig, schema, onSave, onClose }: TableEditorModalProps) {
@@ -43,6 +50,8 @@ export default function TableEditorModal({ initialConfig, schema, onSave, onClos
   // ── Paginated preview ────────────────────────────────────────
   const [previewPage, setPreviewPage] = useState(0)
   const PAGE_SIZE = 10
+  // ── Cell style selection ─────────────────────────────────────
+  const [selectedCell, setSelectedCell] = useState<{row: number; col: number; isHeader: boolean} | null>(null)
 
   useEffect(() => {
     fetch('/api/databases')
@@ -51,7 +60,7 @@ export default function TableEditorModal({ initialConfig, schema, onSave, onClos
       .catch(console.error)
   }, [])
 
-  // ── Existing table config helpers ────────────────────────────
+  // ── Table config helpers ─────────────────────────────────────
   function setHeader(col: number, val: string) {
     setConfig(p => { const h = [...p.headers]; h[col] = val; return { ...p, headers: h } })
   }
@@ -61,8 +70,10 @@ export default function TableEditorModal({ initialConfig, schema, onSave, onClos
   function addCol() {
     setConfig(p => ({
       ...p, cols: p.cols + 1,
-      headers:  [...p.headers, `Col ${p.cols + 1}`],
-      cellData: p.cellData.map(r => [...r, '']),
+      headers:      [...p.headers, `Col ${p.cols + 1}`],
+      cellData:     p.cellData.map(r => [...r, '']),
+      headerStyles: p.headerStyles ? [...p.headerStyles, {}] : undefined,
+      cellStyles:   p.cellStyles ? p.cellStyles.map(r => [...r, {}]) : undefined,
     }))
   }
   function removeCol(col: number) {
@@ -70,27 +81,64 @@ export default function TableEditorModal({ initialConfig, schema, onSave, onClos
       if (p.cols <= 1) return p
       return {
         ...p, cols: p.cols - 1,
-        headers:  p.headers.filter((_, i) => i !== col),
-        cellData: p.cellData.map(r => r.filter((_, i) => i !== col)),
+        headers:      p.headers.filter((_, i) => i !== col),
+        cellData:     p.cellData.map(r => r.filter((_, i) => i !== col)),
+        headerStyles: p.headerStyles?.filter((_, i) => i !== col),
+        cellStyles:   p.cellStyles?.map(r => r.filter((_, i) => i !== col)),
       }
     })
+    if (selectedCell?.col === col) setSelectedCell(null)
   }
   function addRow() {
-    setConfig(p => ({ ...p, rows: p.rows + 1, cellData: [...p.cellData, Array(p.cols).fill('')] }))
+    setConfig(p => ({
+      ...p, rows: p.rows + 1,
+      cellData:   [...p.cellData, Array(p.cols).fill('')],
+      cellStyles: p.cellStyles ? [...p.cellStyles, Array(p.cols).fill({})] : undefined,
+    }))
   }
   function removeRow(row: number) {
     setConfig(p => {
       if (p.rows <= 1) return p
-      return { ...p, rows: p.rows - 1, cellData: p.cellData.filter((_, i) => i !== row) }
+      return {
+        ...p, rows: p.rows - 1,
+        cellData:   p.cellData.filter((_, i) => i !== row),
+        cellStyles: p.cellStyles?.filter((_, i) => i !== row),
+      }
     })
+    if (selectedCell && !selectedCell.isHeader && selectedCell.row === row) setSelectedCell(null)
   }
   function setBorder<K extends keyof TableBorderStyle>(key: K, val: TableBorderStyle[K]) {
     setConfig(p => ({ ...p, borderStyle: { ...p.borderStyle, [key]: val } }))
   }
 
-  // Stop ALL keyboard events from reaching the editor underneath
-  function stopKeys(e: React.KeyboardEvent) {
-    e.stopPropagation()
+  function stopKeys(e: React.KeyboardEvent) { e.stopPropagation() }
+
+  // ── Cell style helpers ───────────────────────────────────────
+  function getCellStyle(isHeader: boolean, row: number, col: number): CellStyle {
+    return isHeader
+      ? (config.headerStyles?.[col] ?? {})
+      : (config.cellStyles?.[row]?.[col] ?? {})
+  }
+
+  function patchCellStyle(isHeader: boolean, row: number, col: number, patch: Partial<CellStyle>) {
+    setConfig(p => {
+      if (isHeader) {
+        const styles: CellStyle[] = p.headerStyles
+          ? [...p.headerStyles]
+          : Array.from({ length: p.cols }, () => ({}))
+        while (styles.length <= col) styles.push({})
+        styles[col] = { ...styles[col], ...patch }
+        return { ...p, headerStyles: styles }
+      } else {
+        const styles: CellStyle[][] = p.cellStyles
+          ? p.cellStyles.map(r => [...r])
+          : Array.from({ length: p.rows }, () => Array.from({ length: p.cols }, () => ({})))
+        while (styles.length <= row) styles.push(Array.from({ length: p.cols }, () => ({})))
+        while (styles[row].length <= col) styles[row].push({})
+        styles[row][col] = { ...styles[row][col], ...patch }
+        return { ...p, cellStyles: styles }
+      }
+    })
   }
 
   // ── Data source handlers ─────────────────────────────────────
@@ -112,9 +160,7 @@ export default function TableEditorModal({ initialConfig, schema, onSave, onClos
     }
   }
 
-  function handleQueryBadgeClick(q: SavedQuery) {
-    setSql(q.sql)
-  }
+  function handleQueryBadgeClick(q: SavedQuery) { setSql(q.sql) }
 
   async function handleRunQuery() {
     if (!sourceId || !sql.trim()) return
@@ -155,13 +201,34 @@ export default function TableEditorModal({ initialConfig, schema, onSave, onClos
     const chosen = availableCols.filter(c => checkedCols.has(c))
     setConfig(p => ({
       ...p,
-      cols: chosen.length,
-      headers: chosen,
-      rows: 1,
-      cellData: [chosen.map(c => `{{${c}}}`)],
+      cols:         chosen.length,
+      headers:      chosen,
+      rows:         1,
+      cellData:     [chosen.map(c => `{{${c}}}`)],
+      headerStyles: Array.from({ length: chosen.length }, () => ({})),
+      cellStyles:   [Array.from({ length: chosen.length }, () => ({}))],
     }))
     setColsApplied(true)
+    setSelectedCell(null)
   }
+
+  // ── Alignment icon helpers ───────────────────────────────────
+  const H_ALIGNS: { val: CellStyle['textAlign']; label: string; title: string }[] = [
+    { val: 'left',   label: '⬅', title: 'Align left' },
+    { val: 'center', label: '⬆', title: 'Align center' },
+    { val: 'right',  label: '➡', title: 'Align right' },
+  ]
+  const V_ALIGNS: { val: CellStyle['verticalAlign']; label: string; title: string }[] = [
+    { val: 'top',    label: '↑', title: 'Align top' },
+    { val: 'middle', label: '⊝', title: 'Align middle' },
+    { val: 'bottom', label: '↓', title: 'Align bottom' },
+  ]
+  const TRANSFORMS: { val: CellStyle['textTransform']; label: string; title: string }[] = [
+    { val: 'none',       label: '—',  title: 'No transform' },
+    { val: 'uppercase',  label: 'AA', title: 'UPPERCASE' },
+    { val: 'capitalize', label: 'Aa', title: 'Capitalize' },
+    { val: 'lowercase',  label: 'aa', title: 'lowercase' },
+  ]
 
   return (
     <div
@@ -238,7 +305,7 @@ export default function TableEditorModal({ initialConfig, schema, onSave, onClos
             )}
           </div>
 
-          {/* ── Column Chooser (appears after query run, before Apply) ── */}
+          {/* ── Column Chooser ── */}
           {availableCols.length > 0 && !colsApplied && (
             <div>
               <div className="flex items-center justify-between mb-1">
@@ -371,6 +438,148 @@ export default function TableEditorModal({ initialConfig, schema, onSave, onClos
                 <button onClick={() => removeRow(r)} className="text-slate-300 hover:text-red-500 ml-auto">× Row</button>
               </div>
             ))}
+          </div>
+
+          {/* ── Cell Styles ── */}
+          <div>
+            <label className="block font-medium mb-1" style={{ color: '#475569' }}>Cell Styles</label>
+            <p className="text-[10px] mb-2" style={{ color: '#94a3b8' }}>Click a cell to style it</p>
+
+            {/* Mini clickable table grid */}
+            <div className="overflow-x-auto">
+              <table className="border-collapse text-[10px]">
+                <thead>
+                  <tr>
+                    {config.headers.map((h, c) => {
+                      const isSelected = selectedCell?.isHeader && selectedCell.col === c
+                      const style = getCellStyle(true, 0, c)
+                      return (
+                        <th
+                          key={c}
+                          onClick={() => setSelectedCell({ row: 0, col: c, isHeader: true })}
+                          className={`px-2 py-1 border cursor-pointer text-left font-semibold bg-slate-100 select-none ${isSelected ? 'border-sky-500 ring-2 ring-sky-400 ring-inset' : 'border-slate-300 hover:bg-slate-200'}`}
+                          style={{
+                            color:      style.color ?? '#475569',
+                            fontWeight: style.fontWeight ?? 600,
+                            minWidth:   80,
+                            textAlign:  style.textAlign ?? 'left',
+                          }}
+                        >
+                          {applyDisplayTransform(h || `Col ${c + 1}`, style.textTransform)}
+                        </th>
+                      )
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {config.cellData.map((row, r) => (
+                    <tr key={r}>
+                      {row.map((cell, c) => {
+                        const isSelected = selectedCell && !selectedCell.isHeader && selectedCell.row === r && selectedCell.col === c
+                        const style = getCellStyle(false, r, c)
+                        return (
+                          <td
+                            key={c}
+                            onClick={() => setSelectedCell({ row: r, col: c, isHeader: false })}
+                            className={`px-2 py-1 border cursor-pointer select-none ${isSelected ? 'border-sky-500 ring-2 ring-sky-400 ring-inset' : 'border-slate-200 hover:bg-slate-50'}`}
+                            style={{
+                              color:      style.color ?? '#6b7280',
+                              fontWeight: style.fontWeight ?? 'normal',
+                              textAlign:  style.textAlign ?? 'left',
+                            }}
+                          >
+                            {applyDisplayTransform(cell || '—', style.textTransform)}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Style controls (shown when a cell is selected) */}
+            {selectedCell && (() => {
+              const { row, col, isHeader } = selectedCell
+              const style = getCellStyle(isHeader, row, col)
+              const label = isHeader
+                ? `Header: ${config.headers[col] ?? `Col ${col + 1}`}`
+                : `Row ${row + 1}, Col ${col + 1}`
+
+              return (
+                <div className="mt-2 p-3 border border-slate-200 rounded bg-slate-50 space-y-2">
+                  <div className="text-[10px] font-semibold" style={{ color: '#475569' }}>{label}</div>
+
+                  <div className="flex flex-wrap gap-3 items-center">
+
+                    {/* Color */}
+                    <label className="flex items-center gap-1 text-[10px]" style={{ color: '#475569' }}>
+                      Color
+                      <input
+                        type="color"
+                        value={style.color ?? '#475569'}
+                        onChange={e => patchCellStyle(isHeader, row, col, { color: e.target.value })}
+                        className="w-6 h-5 rounded border border-slate-300 cursor-pointer p-0"
+                      />
+                    </label>
+
+                    {/* Bold */}
+                    <button
+                      onClick={() => patchCellStyle(isHeader, row, col, { fontWeight: style.fontWeight === 'bold' ? 'normal' : 'bold' })}
+                      title="Toggle bold"
+                      className={`px-2 py-0.5 text-xs font-bold border rounded ${style.fontWeight === 'bold' ? 'bg-sky-600 text-white border-sky-600' : 'border-slate-300 hover:bg-slate-100'}`}
+                    >B</button>
+
+                    {/* Horizontal align */}
+                    <div className="flex items-center gap-0.5">
+                      {H_ALIGNS.map(({ val, label: lbl, title }) => (
+                        <button
+                          key={val}
+                          onClick={() => patchCellStyle(isHeader, row, col, { textAlign: val })}
+                          title={title}
+                          className={`px-1.5 py-0.5 text-xs border rounded ${style.textAlign === val ? 'bg-sky-600 text-white border-sky-600' : 'border-slate-300 hover:bg-slate-100'}`}
+                        >{lbl}</button>
+                      ))}
+                    </div>
+
+                    {/* Vertical align */}
+                    <div className="flex items-center gap-0.5">
+                      {V_ALIGNS.map(({ val, label: lbl, title }) => (
+                        <button
+                          key={val}
+                          onClick={() => patchCellStyle(isHeader, row, col, { verticalAlign: val })}
+                          title={title}
+                          className={`px-1.5 py-0.5 text-xs border rounded ${style.verticalAlign === val ? 'bg-sky-600 text-white border-sky-600' : 'border-slate-300 hover:bg-slate-100'}`}
+                        >{lbl}</button>
+                      ))}
+                    </div>
+
+                    {/* Text transform */}
+                    <div className="flex items-center gap-0.5">
+                      {TRANSFORMS.map(({ val, label: lbl, title }) => (
+                        <button
+                          key={val}
+                          onClick={() => patchCellStyle(isHeader, row, col, { textTransform: val })}
+                          title={title}
+                          className={`px-1.5 py-0.5 text-xs border rounded ${(style.textTransform ?? 'none') === val ? 'bg-sky-600 text-white border-sky-600' : 'border-slate-300 hover:bg-slate-100'}`}
+                        >{lbl}</button>
+                      ))}
+                    </div>
+
+                    {/* Wrap */}
+                    <label className="flex items-center gap-1 text-[10px] cursor-pointer" style={{ color: '#475569' }}>
+                      <input
+                        type="checkbox"
+                        checked={!!style.wrap}
+                        onChange={e => patchCellStyle(isHeader, row, col, { wrap: e.target.checked })}
+                      />
+                      Wrap text
+                    </label>
+
+                  </div>
+                </div>
+              )
+            })()}
           </div>
 
           {/* ── Border Style ── */}

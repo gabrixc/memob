@@ -6,13 +6,24 @@ export interface TableBorderStyle {
   borderWeight: number
 }
 
+export interface CellStyle {
+  color?:         string
+  fontWeight?:    'normal' | 'bold'
+  textTransform?: 'none' | 'uppercase' | 'capitalize' | 'lowercase'
+  textAlign?:     'left' | 'center' | 'right'
+  verticalAlign?: 'top' | 'middle' | 'bottom'
+  wrap?:          boolean
+}
+
 export interface TableConfig {
-  title:       string
-  headers:     string[]
-  cols:        number
-  rows:        number
-  cellData:    string[][]
-  borderStyle: TableBorderStyle
+  title:          string
+  headers:        string[]
+  cols:           number
+  rows:           number
+  cellData:       string[][]
+  borderStyle:    TableBorderStyle
+  headerStyles?:  CellStyle[]    // one per column
+  cellStyles?:    CellStyle[][]  // [dataRow][col]
 }
 
 export function defaultTableConfig(cols = 3, rows = 2): TableConfig {
