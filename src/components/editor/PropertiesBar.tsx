@@ -147,11 +147,22 @@ export default function PropertiesBar({ selected, selectedObjs, canvas, gridSize
 
   function handleTextTransform(transform: string) {
     setTextTransform(transform)
-    const obj = selected as FabricObject & { text?: string; data?: { type?: string; textTransform?: string } }
-    const transformed = applyTextTransform(obj.text ?? '', transform)
+    const obj = selected as FabricObject & {
+      text?: string
+      data?: { type?: string; textTransform?: string; originalText?: string }
+    }
+    const currentData = obj.data ?? {}
+    // Store original text on first transform, reuse it on subsequent transforms
+    const originalText = (currentData as { originalText?: string }).originalText ?? obj.text ?? ''
+    const transformed = transform === 'none' ? originalText : applyTextTransform(originalText, transform)
     obj.set({
       text: transformed,
-      data: { ...obj.data, type: 'paragraph', textTransform: transform },
+      data: {
+        ...currentData,
+        type: 'paragraph',
+        textTransform: transform,
+        originalText,
+      },
     } as Parameters<FabricObject['set']>[0])
     onUpdate?.()
   }
