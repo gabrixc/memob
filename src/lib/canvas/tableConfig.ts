@@ -24,6 +24,8 @@ export interface TableConfig {
   borderStyle:    TableBorderStyle
   headerStyles?:  CellStyle[]    // one per column
   cellStyles?:    CellStyle[][]  // [dataRow][col]
+  colWidths?:     number[]       // per-column width in px (default 80)
+  rowHeight?:     number         // uniform row height in px (default 28)
 }
 
 export function defaultTableConfig(cols = 3, rows = 2): TableConfig {

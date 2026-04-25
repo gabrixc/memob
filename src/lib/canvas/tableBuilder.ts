@@ -1,33 +1,44 @@
 // src/lib/canvas/tableBuilder.ts
-import { Rect, IText, Textbox, Group, type Canvas as FabricCanvas } from 'fabric'
+import { Rect, Textbox, Group, type Canvas as FabricCanvas } from 'fabric'
 import type { TableConfig, CellStyle } from './tableConfig'
 
-const CW = 80
-const CH = 28
+const DEFAULT_CW = 80
+const DEFAULT_CH = 28
+const PAD = 3 // horizontal padding inside each cell
 
 function applyTextTransform(text: string, transform?: CellStyle['textTransform']): string {
   if (!transform || transform === 'none') return text
   if (transform === 'uppercase') return text.toUpperCase()
   if (transform === 'lowercase') return text.toLowerCase()
-  return text.replace(/\b\w/g, c => c.toUpperCase()) // capitalize
+  return text.replace(/\b\w/g, c => c.toUpperCase())
 }
 
-function verticalTop(r: number, verticalAlign?: CellStyle['verticalAlign']): number {
-  const LINE_H = 12 // approximate line height for fontSize 10
-  if (!verticalAlign || verticalAlign === 'top') return r * CH + 4
-  if (verticalAlign === 'middle') return r * CH + Math.round((CH - LINE_H) / 2)
-  return r * CH + CH - LINE_H - 2 // bottom
+function computeTop(r: number, rowH: number, verticalAlign?: CellStyle['verticalAlign']): number {
+  const LINE_H = 12 // approx line height for fontSize 10
+  if (!verticalAlign || verticalAlign === 'top') return r * rowH + PAD
+  if (verticalAlign === 'middle') return r * rowH + Math.round((rowH - LINE_H) / 2)
+  return r * rowH + rowH - LINE_H - PAD
 }
 
 export function buildTableGroup(config: TableConfig): Group {
   const { headers, cols, rows, cellData, borderStyle } = config
   const totalRows = rows + 1
-  const objects: (Rect | IText | Textbox)[] = []
+  const rowH      = config.rowHeight ?? DEFAULT_CH
+
+  // Per-column widths and cumulative x positions
+  const colWidths = Array.from({ length: cols }, (_, c) => config.colWidths?.[c] ?? DEFAULT_CW)
+  const colX: number[] = []
+  let cx = 0
+  for (let c = 0; c < cols; c++) { colX.push(cx); cx += colWidths[c] }
+  const totalWidth  = cx
+  const totalHeight = totalRows * rowH
+
+  const objects: (Rect | Textbox)[] = []
 
   if (borderStyle.showOuter) {
     objects.push(new Rect({
       left: 0, top: 0,
-      width: cols * CW, height: totalRows * CH,
+      width: totalWidth, height: totalHeight,
       fill: 'transparent',
       stroke: borderStyle.borderColor,
       strokeWidth: borderStyle.borderWeight,
@@ -41,10 +52,12 @@ export function buildTableGroup(config: TableConfig): Group {
       const style: CellStyle = isHeader
         ? (config.headerStyles?.[c] ?? {})
         : (config.cellStyles?.[r - 1]?.[c] ?? {})
+      const cw = colWidths[c]
+      const x  = colX[c]
 
       objects.push(new Rect({
-        left:        c * CW, top: r * CH,
-        width:       CW,     height: CH,
+        left:        x,   top: r * rowH,
+        width:       cw,  height: rowH,
         fill:        isHeader ? '#f8fafc' : '#ffffff',
         stroke:      borderStyle.showInner ? borderStyle.borderColor : 'transparent',
         strokeWidth: borderStyle.showInner ? borderStyle.borderWeight : 0,
@@ -55,26 +68,20 @@ export function buildTableGroup(config: TableConfig): Group {
         ? (headers[c] ?? `Col ${c + 1}`)
         : (cellData[r - 1]?.[c] ?? '')
       const text = applyTextTransform(rawText, style.textTransform)
-      const top  = verticalTop(r, style.verticalAlign)
 
-      const commonProps = {
-        left:       c * CW + 4,
-        top,
+      // Always use Textbox so textAlign works correctly for all alignments
+      objects.push(new Textbox(text, {
+        left:       x + PAD,
+        top:        computeTop(r, rowH, style.verticalAlign),
         fontSize:   10,
         fontFamily: 'Inter, sans-serif',
         fill:       style.color ?? '#475569',
         fontWeight: style.fontWeight ?? 'normal',
         textAlign:  style.textAlign ?? 'left',
-        width:      CW - 8,
+        width:      Math.max(cw - PAD * 2, 1),
         selectable: false,
         evented:    false,
-      }
-
-      objects.push(
-        style.wrap
-          ? new Textbox(text, commonProps)
-          : new IText(text, commonProps)
-      )
+      }))
     }
   }
 
