@@ -64,6 +64,7 @@ export default function PropertiesBar({ selected, selectedObjs, canvas, gridSize
 
   // Sync when selection changes
   useEffect(() => {
+    setUploadError(null)
     if (isRect) {
       const obj = selected as RectLike
       const s = (obj.stroke as string) ?? '#94a3b8'
