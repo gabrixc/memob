@@ -4,6 +4,7 @@ import type { FabricObject, Canvas as FabricCanvas, Group } from 'fabric'
 import { replaceWithImage } from '@/lib/canvas/elements'
 import { readFileAsDataURL } from '@/lib/canvas/imageUpload'
 import { applyTextTransform } from '@/lib/canvas/textTransform'
+import { computeBoundingBox, computeAlignedPosition, type AlignMode } from '@/lib/canvas/alignObjects'
 
 interface PropertiesBarProps {
   selected:          FabricObject | null
@@ -26,9 +27,10 @@ export default function PropertiesBar({ selected, selectedObjs, canvas, gridSize
   const isText = selected?.type === 'i-text' || selected?.type === 'text'
 
   const dataType    = (selected as (FabricObject & { data?: { type?: string } }) | null)?.data?.type
-  const isImgHolder = selected?.type === 'group' && dataType === 'imagePlaceholder'
-  const isTable     = selected?.type === 'group' && dataType === 'table'
-  const isParagraph = selected?.type === 'textbox'
+  const isImgHolder   = selected?.type === 'group' && dataType === 'imagePlaceholder'
+  const isTable       = selected?.type === 'group' && dataType === 'table'
+  const isParagraph   = selected?.type === 'textbox'
+  const isMultiSelect = selectedObjs.length > 1
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
@@ -165,6 +167,24 @@ export default function PropertiesBar({ selected, selectedObjs, canvas, gridSize
       },
     } as Parameters<FabricObject['set']>[0])
     onUpdate?.()
+  }
+
+  // ── Alignment helpers ─────────────────────────────────────────────────────
+  function alignObjects(mode: AlignMode) {
+    if (!canvas || selectedObjs.length < 2) return
+    const bounds = selectedObjs.map(obj => ({
+      left:   obj.left   ?? 0,
+      top:    obj.top    ?? 0,
+      width:  (obj.width  ?? 0) * (obj.scaleX ?? 1),
+      height: (obj.height ?? 0) * (obj.scaleY ?? 1),
+    }))
+    const bbox = computeBoundingBox(bounds)
+    selectedObjs.forEach((obj, i) => {
+      const result = computeAlignedPosition(bounds[i], bbox, mode)
+      obj.set(result as Parameters<typeof obj.set>[0])
+      obj.setCoords()
+    })
+    canvas.renderAll()
   }
 
   const btnBase  = 'w-6 h-6 flex items-center justify-center rounded text-sm shrink-0'
@@ -313,6 +333,27 @@ export default function PropertiesBar({ selected, selectedObjs, canvas, gridSize
             <button key={t} title={t} onClick={() => handleTextTransform(t)}
               className={`${btnBase} ${textTransform === t ? btnOn : btnOff}`}>
               {label}
+            </button>
+          ))}
+        </>
+      )}
+
+      {/* ── Multi-select alignment controls ────────────────────────────────── */}
+      {isMultiSelect && (
+        <>
+          <div className="w-px h-4 bg-slate-300 shrink-0" />
+          <span className="text-slate-400 shrink-0 text-[10px]">{selectedObjs.length} selected:</span>
+          {([
+            ['left',    '⬜▏', 'Align Left'],
+            ['right',   '▕⬜', 'Align Right'],
+            ['top',     '⬜▔', 'Align Top'],
+            ['bottom',  '⬜▁', 'Align Bottom'],
+            ['centerH', '↔',  'Center Horizontally'],
+            ['centerV', '↕',  'Center Vertically'],
+          ] as [AlignMode, string, string][]).map(([mode, icon, title]) => (
+            <button key={mode} title={title} onClick={() => alignObjects(mode)}
+              className={`${btnBase} ${btnOff}`}>
+              {icon}
             </button>
           ))}
         </>
