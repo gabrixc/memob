@@ -1,5 +1,7 @@
 import { type Canvas as FabricCanvas, IText, Line, Rect, Group, FabricText, FabricImage, Textbox } from 'fabric'
 import { snapToGrid } from './snap'
+import { buildTableGroup } from './tableBuilder'
+import { defaultTableConfig } from './tableConfig'
 
 const G = 8
 
@@ -80,25 +82,10 @@ export async function replaceWithImage(
 }
 
 export function addTable(canvas: FabricCanvas, x = 48, y = 48, cols = 3, rows = 2) {
-  const cW = 80, cH = 28
-  const objects: (Rect | IText)[] = []
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      objects.push(new Rect({
-        left: c * cW, top: r * cH, width: cW, height: cH,
-        fill: r === 0 ? '#f8fafc' : '#ffffff', stroke: '#e2e8f0', strokeWidth: 1,
-        selectable: false, evented: false,
-      }))
-      objects.push(new IText(r === 0 ? `Col ${c + 1}` : `{{col${c + 1}}}`, {
-        left: c * cW + 4, top: r * cH + 6,
-        fontSize: 10, fontFamily: 'Inter, sans-serif', fill: '#475569',
-        width: cW - 8, selectable: false, evented: false,
-      }))
-    }
-  }
-  const g = new Group(objects, {
-    left: snapToGrid(x, G), top: snapToGrid(y, G),
-    data: { type: 'table', cols, rows },
-  })
-  canvas.add(g); canvas.renderAll(); return g
+  const config = defaultTableConfig(cols, rows)
+  const g = buildTableGroup(config)
+  g.set({ left: snapToGrid(x, G), top: snapToGrid(y, G) })
+  canvas.add(g)
+  canvas.renderAll()
+  return g
 }

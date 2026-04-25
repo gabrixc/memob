@@ -12,6 +12,9 @@ import PropertiesBar from '@/components/editor/PropertiesBar'
 import RightPane from '@/components/editor/RightPane'
 import { addTextBox, addLine, addRect, addImagePlaceholder, addPageBreak, addTable } from '@/lib/canvas/elements'
 import type { HistoryControl } from '@/components/editor/Canvas'
+import TableEditorModal from '@/components/editor/TableEditorModal'
+import { rebuildTableOnCanvas } from '@/lib/canvas/tableBuilder'
+import { defaultTableConfig, type TableConfig } from '@/lib/canvas/tableConfig'
 
 const ZOOM_STEP = 10
 const ZOOM_MIN  = 25
@@ -43,6 +46,8 @@ export default function EditorClient() {
   const [templateName, setTemplateName] = useState('Untitled Memo')
   const [activeRecord, setActiveRecord] = useState<Record<string, string>>({})  // eslint-disable-line
   const [showTableEditor, setShowTableEditor] = useState(false)
+  const [tableEditorSources, setTableEditorSources] = useState<{ id: string; name: string }[]>([])
+  const [tableEditorSchema,  setTableEditorSchema]  = useState<{ table: string; columns: { name: string; type: string }[] }[]>([])
 
   function zoomIn()    { setZoom(z => Math.min(z + ZOOM_STEP, ZOOM_MAX)) }
   function zoomOut()   { setZoom(z => Math.max(z - ZOOM_STEP, ZOOM_MIN)) }
@@ -163,6 +168,17 @@ export default function EditorClient() {
     historyRef.current?.reset()
     canvas.renderAll()
     setSelectedObj(null); setSelectedObjs([])
+  }
+
+  // ── Table editor ────────────────────────────────────────────────────────────
+  async function handleOpenTableEditor() {
+    const srcRes = await fetch('/api/databases')
+    if (srcRes.ok) setTableEditorSources(await srcRes.json())
+    if (activeSource) {
+      const schRes = await fetch(`/api/databases/${activeSource.sourceId}/schema`)
+      if (schRes.ok) setTableEditorSchema(await schRes.json())
+    }
+    setShowTableEditor(true)
   }
 
   // ── Other editor actions ────────────────────────────────────────────────────
@@ -294,7 +310,7 @@ export default function EditorClient() {
         gridSize={gridSize}
         onGridSizeChange={setGridSize}
         onUpdate={() => fabricRef.current?.renderAll()}
-        onEditTable={() => setShowTableEditor(true)}
+        onEditTable={() => handleOpenTableEditor()}
       />
       <div className="flex flex-1 overflow-hidden">
         <LeftToolbar
@@ -357,6 +373,27 @@ export default function EditorClient() {
         onZoomOut={zoomOut}
         onZoomReset={zoomReset}
       />
+      {showTableEditor && selectedObj && (selectedObj as { data?: { type?: string } }).data?.type === 'table' && (() => {
+        const raw = (selectedObj as { data?: { config?: TableConfig; cols?: number; rows?: number } }).data
+        const initialConfig = raw?.config ?? defaultTableConfig(raw?.cols ?? 3, raw?.rows ?? 2)
+        return (
+          <TableEditorModal
+            initialConfig={initialConfig}
+            sources={tableEditorSources}
+            schema={tableEditorSchema}
+            onSave={config => {
+              const canvas = fabricRef.current
+              if (canvas && selectedObj) {
+                const newGroup = rebuildTableOnCanvas(canvas, selectedObj as import('fabric').Group, config)
+                setSelectedObj(newGroup)
+                setSelectedObjs([newGroup])
+              }
+              setShowTableEditor(false)
+            }}
+            onClose={() => setShowTableEditor(false)}
+          />
+        )
+      })()}
     </div>
   )
 }
