@@ -100,7 +100,14 @@ export function addParagraph(canvas: FabricCanvas, x = 48, y = 48) {
     fill:       '#1e293b',
     textAlign:  'left',
     lineHeight: 1.4,
-    data:       { type: 'paragraph', textTransform: 'none' },
+    data: {
+      type:          'paragraph',
+      textTransform: 'none',
+      numbering:     'none',
+      level:         1,
+      indent:        0,
+      tabStop:       0,
+    },
   })
   canvas.add(obj)
   canvas.setActiveObject(obj)
