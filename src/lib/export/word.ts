@@ -1,7 +1,7 @@
 import {
   Document, Paragraph, TextRun, Packer, PageBreak, TabStopType,
   ImageRun, HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom, TextWrappingType,
-  AlignmentType, LineRuleType, Break,
+  AlignmentType, LineRuleType,
 } from 'docx'
 
 // 1 CSS pixel (at 96 DPI) → EMU
@@ -44,12 +44,12 @@ function applyTransform(text: string, transform?: string): string {
   return text
 }
 
-const alignmentMap: Record<string, AlignmentType> = {
+const alignmentMap = {
   left:    AlignmentType.LEFT,
   center:  AlignmentType.CENTER,
   right:   AlignmentType.RIGHT,
   justify: AlignmentType.JUSTIFIED,
-}
+} as const
 
 function collectPages(canvasJson: Record<string, unknown>): Record<string, unknown>[][] {
   if (Array.isArray(canvasJson.pages)) {
@@ -214,7 +214,7 @@ export async function buildDocx(elements: DocElement[]): Promise<Buffer> {
     })
 
     const paraProps = (item: TextItem) => ({
-      alignment: alignmentMap[item.textAlign] ?? AlignmentType.LEFT,
+      alignment: (alignmentMap as Record<string, typeof AlignmentType[keyof typeof AlignmentType]>)[item.textAlign] ?? AlignmentType.LEFT,
       spacing: { line: Math.round((item.lineHeight || 1.15) * 240), lineRule: LineRuleType.AUTO },
     })
 
@@ -236,12 +236,12 @@ export async function buildDocx(elements: DocElement[]): Promise<Buffer> {
     // Multi-column row: use \n as soft line breaks within the same paragraph
     // to preserve tab stop column alignment across wrapped lines
     const tabTwips = Math.round((el.items[1].left - el.items[0].left) * 15)
-    const runs: (TextRun | Break)[] = []
+    const runs: TextRun[] = []
     el.items.forEach((item, i) => {
       if (i > 0) runs.push(new TextRun({ text: '\t' }))
       const lines = item.text.split('\n')
       lines.forEach((line, li) => {
-        if (li > 0) runs.push(new Break())
+        if (li > 0) runs.push(new TextRun({ break: 1 }))
         runs.push(makeRun(item, line))
       })
     })
