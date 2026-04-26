@@ -254,7 +254,7 @@ export async function buildDocx(elements: DocElement[]): Promise<Buffer> {
       spacing:   { line: Math.round((item.lineHeight || 1.15) * 240), lineRule: LineRuleType.AUTO },
       indent: item.indent > 0 ? {
         left:    Math.round(item.indent  * 15),
-        hanging: Math.round(item.tabStop * 15),
+        ...(item.tabStop > 0 ? { hanging: Math.round(item.tabStop * 15) } : {}),
       } : undefined,
       tabStops: item.tabStop > 0 ? [
         { type: TabStopType.LEFT, position: Math.round(item.tabStop * 15) },
