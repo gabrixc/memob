@@ -32,7 +32,7 @@ export default function ParagraphToolbar({ visible, top, left, data, onChange }:
     if (numbering === 'none') {
       onChange({ numbering, level: 1, indent: 0, tabStop: 0 })
     } else {
-      onChange({ numbering })
+      onChange({ numbering, ...PRESETS[data.level] })
     }
   }
 
@@ -59,7 +59,7 @@ export default function ParagraphToolbar({ visible, top, left, data, onChange }:
         {([1, 2, 3, 4] as const).map(l => (
           <button
             key={l}
-            className={btn(data.level === l)}
+            className={`${btn(data.level === l)} disabled:opacity-40 disabled:cursor-not-allowed`}
             disabled={data.numbering === 'none'}
             onClick={() => setLevel(l)}
           >
