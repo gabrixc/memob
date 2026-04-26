@@ -1,7 +1,8 @@
 import {
   Document, Paragraph, TextRun, Packer, PageBreak, TabStopType,
   ImageRun, HorizontalPositionRelativeFrom, VerticalPositionRelativeFrom, TextWrappingType,
-  AlignmentType, LineRuleType,
+  AlignmentType, LineRuleType, LevelFormat,
+  type INumberingOptions,
 } from 'docx'
 
 // 1 CSS pixel (at 96 DPI) → EMU
@@ -158,6 +159,41 @@ function base64FromDataUrl(src: string): string {
   return src.replace(/^data:[^;]+;base64,/, '')
 }
 
+function buildNumberingConfig(elements: DocElement[]): INumberingOptions | undefined {
+  const usesAlpha   = elements.some(el => el.type === 'row' && el.items.some(i => i.numbering === 'alpha'))
+  const usesOutline = elements.some(el => el.type === 'row' && el.items.some(i => i.numbering === 'outline'))
+
+  const config: INumberingOptions['config'][number][] = []
+
+  if (usesAlpha) {
+    config.push({
+      reference: 'alpha-list',
+      levels: [0, 1, 2, 3].map(i => ({
+        level: i,
+        format: LevelFormat.LOWER_LETTER,
+        text: '%1)',
+        alignment: AlignmentType.LEFT,
+        style: { paragraph: { indent: { left: (i + 1) * 720, hanging: 360 } } },
+      })),
+    })
+  }
+
+  if (usesOutline) {
+    config.push({
+      reference: 'outline-list',
+      levels: [0, 1, 2, 3].map(i => ({
+        level: i,
+        format: LevelFormat.DECIMAL,
+        text: Array.from({ length: i + 1 }, (_, j) => `%${j + 1}`).join('.'),
+        alignment: AlignmentType.LEFT,
+        style: { paragraph: { indent: { left: (i + 1) * 720, hanging: 360 } } },
+      })),
+    })
+  }
+
+  return config.length > 0 ? { config } : undefined
+}
+
 export async function buildDocx(elements: DocElement[]): Promise<Buffer> {
   const paragraphs: Paragraph[] = []
 
@@ -215,7 +251,18 @@ export async function buildDocx(elements: DocElement[]): Promise<Buffer> {
 
     const paraProps = (item: TextItem) => ({
       alignment: (alignmentMap as Record<string, typeof AlignmentType[keyof typeof AlignmentType]>)[item.textAlign] ?? AlignmentType.LEFT,
-      spacing: { line: Math.round((item.lineHeight || 1.15) * 240), lineRule: LineRuleType.AUTO },
+      spacing:   { line: Math.round((item.lineHeight || 1.15) * 240), lineRule: LineRuleType.AUTO },
+      indent: item.indent > 0 ? {
+        left:    Math.round(item.indent  * 15),
+        hanging: Math.round(item.tabStop * 15),
+      } : undefined,
+      tabStops: item.tabStop > 0 ? [
+        { type: TabStopType.LEFT, position: Math.round(item.tabStop * 15) },
+      ] : undefined,
+      numbering: item.numbering !== 'none' ? {
+        reference: item.numbering === 'alpha' ? 'alpha-list' : 'outline-list',
+        level:     item.level - 1,
+      } : undefined,
     })
 
     if (el.items.length === 1) {
@@ -252,7 +299,10 @@ export async function buildDocx(elements: DocElement[]): Promise<Buffer> {
     }))
   }
 
+  const numberingConfig = buildNumberingConfig(elements)
+
   const doc = new Document({
+    ...(numberingConfig ? { numbering: numberingConfig } : {}),
     sections: [{
       properties: {
         page: { margin: { top: 720, bottom: 720, left: 1080, right: 720 } },

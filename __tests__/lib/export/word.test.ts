@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { buildDocx, canvasJsonToDocElements } from '@/lib/export/word'
+import { buildDocx, canvasJsonToDocElements, DocElement, type TextItem } from '@/lib/export/word'
 
 describe('canvasJsonToDocElements', () => {
   it('extracts text elements from canvas JSON (pages format)', () => {
@@ -94,5 +94,38 @@ describe('canvasJsonToDocElements – numbering/indent extraction', () => {
     expect(row.items[0].level).toBe(1)
     expect(row.items[0].indent).toBe(0)
     expect(row.items[0].tabStop).toBe(0)
+  })
+})
+
+describe('buildDocx – indent and tabStop', () => {
+  const makeItem = (overrides: Partial<TextItem> = {}): TextItem => ({
+    text: 'a) First item', fontSize: 12, bold: false, italic: false,
+    underline: false, color: '', fontFamily: '', textAlign: 'left',
+    lineHeight: 1.15, left: 0, numbering: 'none', level: 1,
+    indent: 0, tabStop: 0, ...overrides,
+  })
+
+  it('produces a non-empty buffer with indent and tabStop set', async () => {
+    const buf = await buildDocx([
+      { type: 'row', items: [makeItem({ indent: 72, tabStop: 36 })] },
+    ])
+    expect(buf).toBeInstanceOf(Buffer)
+    expect(buf.length).toBeGreaterThan(0)
+  })
+
+  it('produces a non-empty buffer with alpha numbering', async () => {
+    const buf = await buildDocx([
+      { type: 'row', items: [makeItem({ numbering: 'alpha', level: 1, indent: 36, tabStop: 36 })] },
+    ])
+    expect(buf).toBeInstanceOf(Buffer)
+    expect(buf.length).toBeGreaterThan(0)
+  })
+
+  it('produces a non-empty buffer with outline numbering at level 2', async () => {
+    const buf = await buildDocx([
+      { type: 'row', items: [makeItem({ numbering: 'outline', level: 2, indent: 72, tabStop: 36 })] },
+    ])
+    expect(buf).toBeInstanceOf(Buffer)
+    expect(buf.length).toBeGreaterThan(0)
   })
 })
