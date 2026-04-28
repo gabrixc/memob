@@ -105,8 +105,9 @@ export function addParagraph(canvas: FabricCanvas, x = 48, y = 48) {
       textTransform: 'none',
       numbering:     'none',
       level:         1,
-      indent:        0,
-      tabStop:       0,
+      indent:        0,    // inches
+      tabStop:       0,    // inches
+      charStyles: {} as Record<number, { fontWeight?: string; fontStyle?: string }>,
     },
   })
   canvas.add(obj)
