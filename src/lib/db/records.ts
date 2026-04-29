@@ -6,10 +6,15 @@ export async function getRecords(
   const client = new Client({ connectionString: connectionUrl })
   await client.connect()
   try {
-    const { rows } = await client.query(`SELECT * FROM "${table}" LIMIT $1`, [limit])
+    // Sanitize table name - only allow alphanumeric, underscore, and hyphen
+    const sanitizedTable = table.replace(/[^a-zA-Z0-9_-]/g, '')
+    const { rows } = await client.query(`SELECT * FROM "${sanitizedTable}" LIMIT $1`, [limit])
     return rows.map(row =>
       Object.fromEntries(Object.entries(row).map(([k, v]) => [k, String(v ?? '')]))
     )
+  } catch (err) {
+    console.error(`Error querying table "${table}":`, err)
+    throw err
   } finally {
     await client.end()
   }

@@ -1,0 +1,89 @@
+<h2>Section 3: Canvas Interactions</h2>
+<p class="subtitle">How elements behave on the canvas — snap, drag, selection, and grid</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:860px;margin:0 auto">
+
+  <!-- Snap to Grid -->
+  <div class="mockup">
+    <div class="mockup-header">① Snap-to-Grid</div>
+    <div class="mockup-body" style="position:relative;height:160px;background:repeating-linear-gradient(0deg,transparent,transparent 15px,rgba(99,102,241,0.15) 16px),repeating-linear-gradient(90deg,transparent,transparent 15px,rgba(99,102,241,0.15) 16px)">
+      <!-- ghost position (where cursor is) -->
+      <div style="position:absolute;top:22px;left:38px;width:120px;height:28px;border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#94a3b8">ghost (cursor pos)</div>
+      <!-- snapped position -->
+      <div style="position:absolute;top:32px;left:48px;width:120px;height:28px;border:2px solid #0ea5e9;background:rgba(14,165,233,0.08);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#0ea5e9;font-weight:600">snapped to grid ✓</div>
+      <!-- snap lines -->
+      <div style="position:absolute;top:32px;left:0;right:0;height:1px;background:#f59e0b;opacity:0.7"></div>
+      <div style="position:absolute;top:0;bottom:0;left:48px;width:1px;background:#f59e0b;opacity:0.7"></div>
+      <div style="position:absolute;bottom:8px;left:0;right:0;font-size:9px;color:#f59e0b;text-align:center">— yellow snap guides appear on alignment —</div>
+    </div>
+  </div>
+
+  <!-- Anti-ghosting Drag -->
+  <div class="mockup">
+    <div class="mockup-header">② Anti-Ghosting Drag</div>
+    <div class="mockup-body" style="position:relative;height:160px;background:#f8fafc">
+      <!-- original position outline -->
+      <div style="position:absolute;top:20px;left:20px;width:110px;height:32px;border:2px dashed #cbd5e1;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#cbd5e1">original position</div>
+      <!-- solid moving element (no ghost trail) -->
+      <div style="position:absolute;top:60px;left:80px;width:110px;height:32px;border:2px solid #10b981;background:white;box-shadow:0 4px 12px rgba(0,0,0,0.15);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#10b981;font-weight:600">solid — no ghost trail ✓</div>
+      <!-- cursor dot -->
+      <div style="position:absolute;top:70px;left:90px;width:8px;height:8px;background:#10b981;border-radius:50%;box-shadow:0 0 0 3px rgba(16,185,129,0.3)"></div>
+      <div style="position:absolute;bottom:8px;left:0;right:0;font-size:9px;color:#64748b;text-align:center">element moves as solid object — pointer offset preserved</div>
+    </div>
+  </div>
+
+  <!-- Multi-select -->
+  <div class="mockup">
+    <div class="mockup-header">③ Multi-Select & Group Move</div>
+    <div class="mockup-body" style="position:relative;height:160px;background:#f8fafc">
+      <!-- selection rectangle -->
+      <div style="position:absolute;top:12px;left:10px;width:200px;height:110px;border:1.5px dashed #6366f1;background:rgba(99,102,241,0.04);border-radius:2px"></div>
+      <!-- elements inside selection -->
+      <div style="position:absolute;top:22px;left:18px;width:80px;height:22px;border:2px solid #6366f1;background:rgba(99,102,241,0.08);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#6366f1">Text Box</div>
+      <div style="position:absolute;top:22px;left:108px;width:80px;height:22px;border:2px solid #6366f1;background:rgba(99,102,241,0.08);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#6366f1">Image</div>
+      <div style="position:absolute;top:54px;left:18px;width:170px;height:22px;border:2px solid #6366f1;background:rgba(99,102,241,0.08);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#6366f1">Table Row</div>
+      <!-- resize handles -->
+      <div style="position:absolute;top:10px;left:8px;width:6px;height:6px;background:#6366f1;border-radius:1px"></div>
+      <div style="position:absolute;top:10px;left:208px;width:6px;height:6px;background:#6366f1;border-radius:1px"></div>
+      <div style="position:absolute;top:118px;left:8px;width:6px;height:6px;background:#6366f1;border-radius:1px"></div>
+      <div style="position:absolute;top:118px;left:208px;width:6px;height:6px;background:#6366f1;border-radius:1px"></div>
+      <div style="position:absolute;bottom:8px;left:0;right:0;font-size:9px;color:#64748b;text-align:center">drag-select or Shift+click to multi-select</div>
+    </div>
+  </div>
+
+  <!-- Right-pane drag onto canvas -->
+  <div class="mockup">
+    <div class="mockup-header">④ Drag Field → Canvas Placeholder</div>
+    <div class="mockup-body" style="position:relative;height:160px;background:#f8fafc;display:flex;gap:0">
+      <!-- mini right pane -->
+      <div style="width:80px;background:#f1f5f9;border-right:1px solid #e2e8f0;padding:6px;font-size:9px">
+        <div style="color:#94a3b8;margin-bottom:4px;font-weight:600">FIELDS</div>
+        <div style="padding:2px 4px;color:#0ea5e9;margin-bottom:2px">{{emp_name}}</div>
+        <div style="padding:2px 4px;background:#dbeafe;color:#0ea5e9;border:1px solid #93c5fd;border-radius:3px;margin-bottom:2px;cursor:grabbing">{{emp_dept}}</div>
+        <div style="padding:2px 4px;color:#0ea5e9">{{memo_date}}</div>
+      </div>
+      <!-- mini canvas drop zone -->
+      <div style="flex:1;position:relative;background:repeating-linear-gradient(0deg,transparent,transparent 11px,rgba(99,102,241,0.1) 12px),repeating-linear-gradient(90deg,transparent,transparent 11px,rgba(99,102,241,0.1) 12px)">
+        <!-- existing element -->
+        <div style="position:absolute;top:16px;left:8px;width:100px;height:18px;border:1px dashed #94a3b8;display:flex;align-items:center;padding:0 4px;font-size:8px;color:#94a3b8">{{emp_name}}</div>
+        <!-- drop target highlight -->
+        <div style="position:absolute;top:46px;left:8px;width:100px;height:18px;border:2px dashed #0ea5e9;background:rgba(14,165,233,0.1);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#0ea5e9">drop here →</div>
+        <!-- drag arrow -->
+        <div style="position:absolute;top:36px;left:-6px;font-size:14px;color:#f59e0b">→</div>
+        <div style="position:absolute;bottom:6px;left:0;right:0;font-size:8px;color:#64748b;text-align:center">drops as editable text placeholder</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:16px" class="section">
+  <h3>Canvas Interaction Summary</h3>
+  <ul style="font-size:13px">
+    <li><b>Snap-to-grid</b> — 8px grid (configurable), yellow alignment guides appear when edges/centers align with other objects</li>
+    <li><b>Anti-ghosting drag</b> — Fabric.js renders one solid object while dragging; pointer offset from object origin is preserved so it doesn't "jump" to cursor center</li>
+    <li><b>Multi-select</b> — rubber-band drag-select or Shift+click; selected group moves/resizes together</li>
+    <li><b>Field drop</b> — dragging from right pane creates a text object with <code>{{field_name}}</code> content, immediately editable and snappable</li>
+    <li><b>Keyboard shortcuts</b> — Ctrl+C/X/V for copy/cut/paste, Delete to remove, Ctrl+Z/Y for undo/redo, arrow keys for nudge</li>
+  </ul>
+</div>

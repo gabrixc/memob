@@ -63,7 +63,7 @@ enum ExportStatus {
 model ExportJob {
   id          String       @id @default(uuid())
   templateId  String       @map("template_id")
-  template    Template     @relation(fields: [templateId], references: [id])
+  template    Template     @relation(fields: [templateId], references: [id], onDelete: Cascade)
   recordId    String       @map("record_id")
   format      ExportFormat
   status      ExportStatus @default(pending)

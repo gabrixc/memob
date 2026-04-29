@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sifat Elemen Panel — Design Options</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f1f5f9;
+    padding: 24px;
+    color: #1e293b;
+  }
+  h1 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #64748b; margin-bottom: 28px; }
+
+  .layouts { display: flex; gap: 20px; flex-wrap: wrap; }
+
+  /* --- PANEL MOCK --- */
+  .panel-wrap {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 220px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+  }
+  .panel-wrap:hover { border-color: #94a3b8; }
+  .panel-wrap.selected { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.2); }
+  .panel-wrap.selected .panel-label { background: #0ea5e9; color: white; }
+
+  .panel-label {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .badge {
+    background: #0ea5e9;
+    color: white;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 10px;
+  }
+  .panel-body { padding: 10px 12px; }
+
+  /* --- shared panel UI atoms --- */
+  .section-title {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin: 10px 0 6px;
+  }
+  .section-title:first-child { margin-top: 2px; }
+  .field-row { display: flex; gap: 6px; margin-bottom: 6px; }
+  .field {
+    flex: 1;
+  }
+  .field label {
+    display: block;
+    font-size: 10px;
+    color: #64748b;
+    margin-bottom: 2px;
+  }
+  .mock-input {
+    width: 100%;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: 11px;
+    color: #1e293b;
+  }
+  .mock-select {
+    width: 100%;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: 11px;
+    color: #1e293b;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    padding-right: 20px;
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .mock-checkbox {
+    width: 13px;
+    height: 13px;
+    border: 1.5px solid #0ea5e9;
+    border-radius: 3px;
+    background: #0ea5e9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .mock-checkbox svg { width: 9px; height: 9px; }
+  .checkbox-label { font-size: 11px; color: #334155; }
+
+  .btn-group { display: flex; gap: 3px; margin-bottom: 6px; }
+  .fmt-btn {
+    padding: 3px 7px;
+    font-size: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    background: #f8fafc;
+    color: #334155;
+    cursor: default;
+  }
+  .fmt-btn.active { background: #0f172a; color: white; border-color: #0f172a; }
+
+  .mock-textarea {
+    width: 100%;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 5px 6px;
+    font-size: 10px;
+    color: #334155;
+    line-height: 1.4;
+    min-height: 56px;
+    font-family: inherit;
+    resize: none;
+  }
+  .hint { font-size: 9px; color: #94a3b8; margin-bottom: 4px; }
+
+  .divider { border: none; border-top: 1px solid #f1f5f9; margin: 8px 0; }
+
+  /* Description card */
+  .desc-card {
+    width: 220px;
+    padding: 14px;
+    background: white;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+  .desc-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 8px; color: #0f172a; }
+  .desc-card p { font-size: 12px; color: #475569; line-height: 1.5; margin-bottom: 8px; }
+  .pro { font-size: 11px; color: #16a34a; margin-bottom: 3px; }
+  .con { font-size: 11px; color: #dc2626; margin-bottom: 3px; }
+  .pro::before { content: '✓ '; font-weight: bold; }
+  .con::before { content: '✗ '; font-weight: bold; }
+
+  /* Option labels */
+  .opt-letter {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 22px;
+    margin-right: 6px;
+  }
+  .panel-wrap.selected .opt-letter { background: #0ea5e9; color: white; }
+
+  .row-option { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+
+  footer { margin-top: 28px; font-size: 12px; color: #64748b; }
+</style>
+</head>
+<body>
+
+<h1>Sifat Elemen — Fixed Right Panel</h1>
+<p class="subtitle">Three layout approaches for the paragraph properties panel. Click one to select it.</p>
+
+<!-- Option A -->
+<div class="row-option">
+  <div class="panel-wrap" id="opt-a" onclick="selectOpt('a')">
+    <div class="panel-label">
+      <span><span class="opt-letter">A</span> Compact</span>
+    </div>
+    <div class="panel-body">
+      <div class="section-title">Kedudukan &amp; Saiz</div>
+      <div class="field-row">
+        <div class="field"><label>X (pt)</label><div class="mock-input">28.8</div></div>
+        <div class="field"><label>Y (pt)</label><div class="mock-input">108.7</div></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Lebar (pt)</label><div class="mock-input">533</div></div>
+        <div class="field"><label>Tinggi (pt)</label><div class="mock-input">55</div></div>
+      </div>
+      <hr class="divider">
+      <div class="section-title">Perenggan</div>
+      <div class="checkbox-row">
+        <div class="mock-checkbox"><svg viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" fill="none" stroke="white" stroke-width="1.5"/></svg></div>
+        <span class="checkbox-label">Bernombor</span>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Nombor</label><div class="mock-input">2.5</div></div>
+        <div class="field"><label>Saiz Fon (pt)</label><div class="mock-input">12</div></div>
+      </div>
+      <div class="section-title" style="margin-top:6px">Teks Perenggan</div>
+      <div class="btn-group">
+        <div class="fmt-btn active">B</div>
+        <div class="fmt-btn">I</div>
+        <div class="fmt-btn">BI</div>
+        <div class="hint" style="margin:0;padding-top:3px">**bold** *italic*</div>
+      </div>
+      <textarea class="mock-textarea" readonly>Kru dan peserta memancing **tidak dibenarkan memuat naik gambar** mengenai situasi semasa</textarea>
+      <div style="margin-top:6px">
+        <label style="font-size:10px;color:#64748b">Aras Inden</label>
+        <div class="mock-select" style="display:flex;align-items:center">1 — Sub-item (2.1)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="desc-card">
+    <h3>Option A — Compact</h3>
+    <p>All properties in one scrollable panel, grouped by section. Mirrors your screenshot closely.</p>
+    <div class="pro">Familiar layout — matches your mockup</div>
+    <div class="pro">Everything visible at once</div>
+    <div class="pro">Easiest to implement</div>
+    <div class="con">Panel gets long with many fields</div>
+  </div>
+</div>
+
+<!-- Option B -->
+<div class="row-option">
+  <div class="panel-wrap" id="opt-b" onclick="selectOpt('b')">
+    <div class="panel-label">
+      <span><span class="opt-letter">B</span> Tabbed</span>
+    </div>
+    <div class="panel-body">
+      <div style="display:flex;gap:0;margin-bottom:10px;border-bottom:1px solid #e2e8f0">
+        <div style="padding:4px 10px;font-size:10px;font-weight:700;color:#0ea5e9;border-bottom:2px solid #0ea5e9;cursor:default">Posisi</div>
+        <div style="padding:4px 10px;font-size:10px;color:#94a3b8;cursor:default">Teks</div>
+        <div style="padding:4px 10px;font-size:10px;color:#94a3b8;cursor:default">Gaya</div>
+      </div>
+      <div class="section-title" style="margin-top:0">Kedudukan &amp; Saiz</div>
+      <div class="field-row">
+        <div class="field"><label>X (pt)</label><div class="mock-input">28.8</div></div>
+        <div class="field"><label>Y (pt)</label><div class="mock-input">108.7</div></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Lebar (pt)</label><div class="mock-input">533</div></div>
+        <div class="field"><label>Tinggi (pt)</label><div class="mock-input">55</div></div>
+      </div>
+      <div class="hint" style="margin-top:8px;text-align:center">Switch tabs for text &amp; style</div>
+    </div>
+  </div>
+
+  <div class="desc-card">
+    <h3>Option B — Tabbed</h3>
+    <p>Split into tabs: <em>Posisi</em> (position), <em>Teks</em> (text content), <em>Gaya</em> (style). Less scrolling.</p>
+    <div class="pro">Keeps panel height short</div>
+    <div class="pro">Organized by concern</div>
+    <div class="con">Requires tab switching to edit different things</div>
+    <div class="con">More complex to build</div>
+  </div>
+</div>
+
+<!-- Option C -->
+<div class="row-option">
+  <div class="panel-wrap" id="opt-c" onclick="selectOpt('c')">
+    <div class="panel-label">
+      <span><span class="opt-letter">C</span> Accordion</span>
+    </div>
+    <div class="panel-body">
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:5px;margin-bottom:4px">
+        <div style="padding:6px 8px;font-size:10px;font-weight:700;color:#334155;display:flex;justify-content:space-between">
+          KEDUDUKAN &amp; SAIZ <span style="color:#94a3b8">▲</span>
+        </div>
+        <div style="padding:0 8px 8px">
+          <div class="field-row">
+            <div class="field"><label>X</label><div class="mock-input">28.8</div></div>
+            <div class="field"><label>Y</label><div class="mock-input">108.7</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:5px">
+        <div style="padding:6px 8px;font-size:10px;font-weight:700;color:#334155;display:flex;justify-content:space-between">
+          PERENGGAN <span style="color:#94a3b8">▲</span>
+        </div>
+        <div style="padding:0 8px 8px">
+          <div class="checkbox-row">
+            <div class="mock-checkbox"><svg viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" fill="none" stroke="white" stroke-width="1.5"/></svg></div>
+            <span class="checkbox-label">Bernombor</span>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Nombor</label><div class="mock-input">2.5</div></div>
+          </div>
+          <textarea class="mock-textarea" readonly style="min-height:36px">Kru dan peserta memancing...</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="desc-card">
+    <h3>Option C — Accordion</h3>
+    <p>Each section collapses/expands. Users can hide "Kedudukan &amp; Saiz" and focus only on paragraph content.</p>
+    <div class="pro">Flexible — hide sections you don't need</div>
+    <div class="pro">Scales well if more sections added</div>
+    <div class="con">Slightly more complex interactions</div>
+    <div class="con">Section state needs to persist</div>
+  </div>
+</div>
+
+<footer>Click a panel to select your preferred layout approach. You can change your mind before confirming.</footer>
+
+<script>
+  function selectOpt(id) {
+    document.querySelectorAll('.panel-wrap').forEach(el => el.classList.remove('selected'));
+    document.getElementById('opt-' + id).classList.add('selected');
+    if (window.__superpowers_recordEvent) {
+      window.__superpowers_recordEvent({ type: 'click', choice: id, text: 'Option ' + id.toUpperCase() });
+    }
+  }
+</script>
+</body>
+</html>

@@ -10,13 +10,14 @@ interface RightPaneProps {
   onFieldDrop: (field: string, x: number, y: number) => void
   onRecordChange: (record: Record<string, string>) => void
   onSourceTableChange?: (sourceId: string, table: string) => void
+  onQuerySelect?: (sourceId: string, sql: string) => void
 }
 
 const SYSTEM_TABLES = new Set([
   '_prisma_migrations', 'data_sources', 'export_jobs', 'templates', 'webhook_configs',
 ])
 
-export default function RightPane({ onFieldDrop, onRecordChange, onSourceTableChange }: RightPaneProps) {
+export default function RightPane({ onFieldDrop, onRecordChange, onSourceTableChange, onQuerySelect }: RightPaneProps) {
   const [sources, setSources] = useState<{ id: string; name: string }[]>([])
   const [sourceId, setSourceId] = useState('')
   const [schema, setSchema] = useState<TableSchema[]>([])
@@ -71,7 +72,7 @@ export default function RightPane({ onFieldDrop, onRecordChange, onSourceTableCh
     if (rows[0]) { setActiveRecord(rows[0]); onRecordChange(rows[0]) }
     const columns = rows[0] ? Object.keys(rows[0]).map(name => ({ name, type: 'text' })) : []
     setActiveQuerySchema({ table: query.name, columns })
-    onSourceTableChange?.(sourceId, query.name)
+    onQuerySelect?.(sourceId, query.sql)
   }
 
   async function deleteQuery(queryId: string) {

@@ -18,6 +18,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
 export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
   if (!await auth()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  
+  // Delete related export jobs first to avoid foreign key constraint violations
+  await prisma.exportJob.deleteMany({ where: { templateId: params.id } })
   await prisma.template.delete({ where: { id: params.id } })
+  
   return new NextResponse(null, { status: 204 })
 }

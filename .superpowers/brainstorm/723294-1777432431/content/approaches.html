@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implementation Approaches</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; padding: 24px; color: #1e293b; }
+  h1 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #64748b; margin-bottom: 28px; }
+
+  .option-row { display: flex; gap: 16px; margin-bottom: 24px; align-items: flex-start; }
+
+  .card {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+  }
+  .card:hover { border-color: #94a3b8; }
+  .card.selected { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.2); }
+
+  .card-header {
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card.selected .card-header { background: #0ea5e9; color: white; }
+  .opt-circle {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #e2e8f0; color: #475569;
+    font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .card.selected .opt-circle { background: white; color: #0ea5e9; }
+
+  /* Editor layout mockup */
+  .editor-mock {
+    display: flex;
+    width: 460px;
+    height: 260px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+    font-size: 10px;
+  }
+
+  .em-topbar {
+    background: #1e293b;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 8px;
+    color: #cbd5e1;
+    font-size: 9px;
+    flex-shrink: 0;
+  }
+  .em-topbar-pill {
+    background: #334155;
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+  .em-topbar-pill.dim { opacity: 0.4; }
+  .em-topbar-pill.highlight { background: #0ea5e9; color: white; }
+
+  .em-body { display: flex; flex: 1; overflow: hidden; }
+
+  .em-canvas {
+    flex: 1;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    position: relative;
+  }
+  .em-page {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 3px;
+    width: 100%;
+    height: 130px;
+    padding: 10px;
+    position: relative;
+  }
+  .em-text-block {
+    border: 1.5px dashed #0ea5e9;
+    border-radius: 3px;
+    padding: 5px 7px;
+    font-size: 8px;
+    color: #475569;
+    background: #f0f9ff;
+    margin-bottom: 6px;
+    position: relative;
+  }
+  .em-text-block-plain {
+    padding: 5px 7px;
+    font-size: 8px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+  }
+  .selection-handle {
+    width: 5px; height: 5px;
+    background: #0ea5e9;
+    border-radius: 50%;
+    position: absolute;
+    top: -3px; right: -3px;
+  }
+
+  .em-right {
+    width: 130px;
+    background: white;
+    border-left: 1px solid #e2e8f0;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .em-right-header {
+    padding: 6px 8px;
+    font-size: 8px;
+    font-weight: 700;
+    color: #0f172a;
+    border-bottom: 1px solid #f1f5f9;
+    background: #f8fafc;
+  }
+  .em-right-sub {
+    font-size: 7px;
+    font-weight: 400;
+    color: #94a3b8;
+  }
+  .em-section {
+    padding: 5px 8px 0;
+  }
+  .em-section-title {
+    font-size: 7px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    margin-bottom: 4px;
+  }
+  .em-field-row { display: flex; gap: 3px; margin-bottom: 3px; }
+  .em-field { flex: 1; }
+  .em-label { font-size: 7px; color: #64748b; margin-bottom: 1px; }
+  .em-input {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 3px;
+    padding: 2px 4px;
+    font-size: 8px;
+    color: #334155;
+    width: 100%;
+  }
+  .em-divider { border: none; border-top: 1px solid #f1f5f9; margin: 4px 0; }
+  .em-checkbox-row {
+    display: flex; align-items: center; gap: 4px; margin-bottom: 3px;
+  }
+  .em-cb {
+    width: 9px; height: 9px;
+    background: #0ea5e9;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .em-cb-label { font-size: 8px; color: #334155; }
+  .em-textarea {
+    width: 100%;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 3px;
+    padding: 3px 4px;
+    font-size: 7px;
+    color: #334155;
+    line-height: 1.4;
+    height: 32px;
+    overflow: hidden;
+    margin-bottom: 3px;
+  }
+  .em-btn-group { display: flex; gap: 2px; margin-bottom: 3px; }
+  .em-btn {
+    padding: 1px 4px;
+    font-size: 7px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 2px;
+    color: #334155;
+  }
+  .em-btn.active { background: #0f172a; color: white; border-color: #0f172a; }
+  .em-select {
+    width: 100%;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 3px;
+    padding: 2px 4px;
+    font-size: 7px;
+    color: #334155;
+    margin-bottom: 3px;
+  }
+
+  /* floating toolbar variant */
+  .em-float-toolbar {
+    position: absolute;
+    top: -18px;
+    left: 0;
+    background: #1e293b;
+    border-radius: 4px;
+    padding: 2px 5px;
+    display: flex;
+    gap: 4px;
+    z-index: 2;
+  }
+  .em-float-btn {
+    font-size: 7px;
+    color: #cbd5e1;
+    padding: 1px 3px;
+  }
+  .em-float-btn.sep { color: #475569; margin: 0 1px; }
+
+  /* data pane variant */
+  .em-data-pane {
+    width: 130px;
+    background: #f8fafc;
+    border-left: 1px solid #e2e8f0;
+    overflow-y: auto;
+    flex-shrink: 0;
+    padding: 6px 8px;
+  }
+  .em-data-title {
+    font-size: 7px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .em-data-item {
+    font-size: 7px;
+    color: #334155;
+    padding: 2px 4px;
+    border-radius: 2px;
+    margin-bottom: 2px;
+    background: white;
+    border: 1px solid #e2e8f0;
+  }
+
+  /* desc panel */
+  .desc {
+    flex: 1;
+    min-width: 0;
+    padding: 4px 0;
+  }
+  .desc h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .desc p { font-size: 12px; color: #475569; line-height: 1.5; margin-bottom: 8px; }
+  .pro { font-size: 11px; color: #16a34a; margin-bottom: 3px; }
+  .con { font-size: 11px; color: #dc2626; margin-bottom: 3px; }
+  .pro::before { content: '✓ '; font-weight: 700; }
+  .con::before { content: '✗ '; font-weight: 700; }
+  .rec-badge {
+    display: inline-block;
+    background: #dcfce7;
+    color: #16a34a;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  footer { margin-top: 20px; font-size: 12px; color: #64748b; }
+</style>
+</head>
+<body>
+
+<h1>Implementation Approaches</h1>
+<p class="subtitle">How the "Sifat Elemen" panel fits into the editor layout. Click to select.</p>
+
+<!-- Option A -->
+<div class="option-row">
+  <div class="card" id="opt-a" onclick="selectOpt('a')" style="width:460px">
+    <div class="card-header"><div class="opt-circle">A</div> Replace floating toolbar — dedicated right panel</div>
+    <div style="padding:12px">
+      <!-- editor mockup -->
+      <div class="editor-mock" style="flex-direction:column; height: auto;">
+        <div class="em-topbar">
+          <div class="em-topbar-pill dim">B I Aa</div>
+          <div class="em-topbar-pill dim">Saiz Fon: 12</div>
+          <div class="em-topbar-pill dim">Align ↔</div>
+          <div style="flex:1"></div>
+          <div style="font-size:8px;opacity:0.5">Top bar (typography only)</div>
+        </div>
+        <div class="em-body">
+          <div class="em-canvas">
+            <div class="em-page">
+              <div class="em-text-block">
+                <div class="selection-handle"></div>
+                2.5 Kru dan peserta memancing tidak dibenarkan...
+              </div>
+              <div class="em-text-block-plain">1.1 Lorem ipsum dolor sit amet</div>
+              <div class="em-text-block-plain">1.2 Consectetur adipiscing elit</div>
+            </div>
+          </div>
+          <div class="em-right">
+            <div class="em-right-header">SIFAT ELEMEN<br><span class="em-right-sub">body paragraph</span></div>
+            <div class="em-section">
+              <div class="em-section-title" style="margin-top:5px">Kedudukan &amp; Saiz</div>
+              <div class="em-field-row">
+                <div class="em-field"><div class="em-label">X (pt)</div><div class="em-input">28.8</div></div>
+                <div class="em-field"><div class="em-label">Y (pt)</div><div class="em-input">108.7</div></div>
+              </div>
+              <div class="em-field-row">
+                <div class="em-field"><div class="em-label">Lebar</div><div class="em-input">533</div></div>
+                <div class="em-field"><div class="em-label">Tinggi</div><div class="em-input">55</div></div>
+              </div>
+              <hr class="em-divider">
+              <div class="em-section-title">Perenggan</div>
+              <div class="em-checkbox-row">
+                <div class="em-cb"></div>
+                <span class="em-cb-label">Bernombor</span>
+              </div>
+              <div class="em-field-row">
+                <div class="em-field"><div class="em-label">Nombor</div><div class="em-input">2.5</div></div>
+                <div class="em-field"><div class="em-label">Saiz Fon</div><div class="em-input">12</div></div>
+              </div>
+              <div class="em-btn-group">
+                <div class="em-btn active">B</div>
+                <div class="em-btn">I</div>
+                <div class="em-btn">BI</div>
+              </div>
+              <div class="em-textarea">Kru dan peserta memancing **tidak dibenarkan**...</div>
+              <div class="em-label">Aras Inden</div>
+              <div class="em-select">1 — Sub-item (2.1)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="desc">
+    <div class="rec-badge">★ Recommended</div>
+    <h3>Option A</h3>
+    <p>Add a fixed "Sifat Elemen" right panel. The floating ParagraphToolbar is removed. The top PropertiesBar keeps only typography (bold, italic, font size, color, align).</p>
+    <div class="pro">Matches your screenshot exactly</div>
+    <div class="pro">No more floating toolbar clutter</div>
+    <div class="pro">Panel always visible — no hover needed</div>
+    <div class="pro">Two-way sync: edit on canvas or in panel</div>
+    <div class="con">Narrows canvas space slightly</div>
+  </div>
+</div>
+
+<!-- Option B -->
+<div class="option-row">
+  <div class="card" id="opt-b" onclick="selectOpt('b')" style="width:460px">
+    <div class="card-header"><div class="opt-circle">B</div> Keep floating toolbar + add panel as overlay on right</div>
+    <div style="padding:12px">
+      <div class="editor-mock" style="flex-direction:column; height:auto;">
+        <div class="em-topbar">
+          <div class="em-topbar-pill">B I Aa</div>
+          <div class="em-topbar-pill">Saiz Fon: 12</div>
+          <div class="em-topbar-pill">Align ↔</div>
+          <div class="em-topbar-pill highlight">Nombor: 2.5  L1  ↵ ¶</div>
+          <div style="flex:1"></div>
+        </div>
+        <div class="em-body">
+          <div class="em-canvas" style="position:relative">
+            <div class="em-page">
+              <div class="em-text-block" style="margin-top:18px">
+                <div class="em-float-toolbar">
+                  <span class="em-float-btn">None</span>
+                  <span class="em-float-btn sep">|</span>
+                  <span class="em-float-btn">a)</span>
+                  <span class="em-float-btn">1.</span>
+                </div>
+                <div class="selection-handle"></div>
+                2.5 Kru dan peserta memancing...
+              </div>
+              <div class="em-text-block-plain">1.1 Lorem ipsum dolor sit</div>
+            </div>
+          </div>
+          <div class="em-data-pane">
+            <div class="em-data-title">Data Sources</div>
+            <div class="em-data-item">Table: peserta</div>
+            <div class="em-data-item">Table: kru</div>
+            <div class="em-data-item">Query: aktif</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="desc">
+    <h3>Option B</h3>
+    <p>Keep the existing floating ParagraphToolbar and PropertiesBar. Add the "Sifat Elemen" panel as an optional side panel that can be toggled. Right side shows data sources by default.</p>
+    <div class="pro">Non-breaking — existing toolbars stay</div>
+    <div class="pro">Data sources panel still accessible</div>
+    <div class="con">Two places to edit the same thing — confusing</div>
+    <div class="con">Floating toolbar still has the original inline-editing issues</div>
+  </div>
+</div>
+
+<footer>Click an approach to select it.</footer>
+
+<script>
+  function selectOpt(id) {
+    document.querySelectorAll('.card').forEach(el => el.classList.remove('selected'));
+    document.getElementById('opt-' + id).classList.add('selected');
+    if (window.__superpowers_recordEvent) {
+      window.__superpowers_recordEvent({ type: 'click', choice: id, text: 'Option ' + id.toUpperCase() });
+    }
+  }
+</script>
+</body>
+</html>

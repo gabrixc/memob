@@ -367,7 +367,7 @@ export default function EditorClient() {
           }}
           onQuerySelect={(sourceId, sql) => {
             setActiveQuery({ sourceId, sql })
-            setActiveSource(null) // Clear table when selecting a custom query
+            setActiveSource(null) // Clear table when selecting a saved query
           }}
         />
       </div>

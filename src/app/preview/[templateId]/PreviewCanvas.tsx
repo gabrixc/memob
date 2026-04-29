@@ -14,7 +14,9 @@ export default function PreviewCanvas({ canvasJson }: { canvasJson: object }) {
       width: 794, height: 1123, backgroundColor: '#ffffff',
       selection: false, interactive: false,
     })
-    canvas.loadFromJSON(canvasJson).then(() => { if (!disposed) canvas.renderAll() })
+    canvas.loadFromJSON(canvasJson)
+      .then(() => { if (!disposed) canvas.renderAll() })
+      .catch(() => { /* canvas disposed mid-load (StrictMode remount) */ })
     return () => {
       disposed = true
       canvas.dispose()

@@ -1,0 +1,9 @@
+{"type":"server-started","port":60773,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:60773","screen_dir":"/home/faizalamat/memo-builder/.superpowers/brainstorm/1028346-1776616417/content","state_dir":"/home/faizalamat/memo-builder/.superpowers/brainstorm/1028346-1776616417/state"}
+{"type":"screen-added","file":"/home/faizalamat/memo-builder/.superpowers/brainstorm/1028346-1776616417/content/approaches.html"}
+{"source":"user-event","type":"click","text":"A\n    \n      Monolithic Next.js Full-Stack ⭐ Recommended\n      Single Next.js app — API routes handle everything: DB queries, export (PDF/image/Word), and webhooks. Fabric.js on the frontend. Prisma ORM + PostgreSQL.\n      \n        ProsSingle deployment, simple setupShared types between front & backFast to build for single-admin useNo extra services needed\n        ConsExport pipeline runs in same processHarder to scale independently later","choice":"a","id":null,"timestamp":1776616906261}
+{"type":"screen-added","file":"/home/faizalamat/memo-builder/.superpowers/brainstorm/1028346-1776616417/content/layout-wireframe.html"}
+{"type":"screen-updated","file":"/home/faizalamat/memo-builder/.superpowers/brainstorm/1028346-1776616417/content/layout-wireframe.html"}
+{"type":"screen-added","file":"/home/faizalamat/memo-builder/.superpowers/brainstorm/1028346-1776616417/content/waiting-1.html"}
+{"type":"screen-added","file":"/home/faizalamat/memo-builder/.superpowers/brainstorm/1028346-1776616417/content/canvas-interactions.html"}
+{"type":"screen-added","file":"/home/faizalamat/memo-builder/.superpowers/brainstorm/1028346-1776616417/content/waiting-2.html"}
+{"type":"server-stopped","reason":"idle timeout"}

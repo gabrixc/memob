@@ -1,0 +1,42 @@
+<h2>3 Architectural Approaches</h2>
+<p class="subtitle">Choose the overall system architecture for your Memo Builder</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Monolithic Next.js Full-Stack ⭐ Recommended</h3>
+      <p>Single Next.js app — API routes handle everything: DB queries, export (PDF/image/Word), and webhooks. Fabric.js on the frontend. Prisma ORM + PostgreSQL.</p>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Single deployment, simple setup</li><li>Shared types between front &amp; back</li><li>Fast to build for single-admin use</li><li>No extra services needed</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Export pipeline runs in same process</li><li>Harder to scale independently later</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Next.js Frontend + Separate Express API</h3>
+      <p>Next.js handles only the UI. A separate Express/Fastify server manages DB, export pipeline, and webhooks. Two services deployed independently.</p>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Clear separation of concerns</li><li>API can serve other clients</li><li>Export pipeline independently scalable</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Two services to deploy &amp; maintain</li><li>More initial setup complexity</li><li>CORS and auth plumbing needed</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Next.js + Background Job Queue (BullMQ/Redis)</h3>
+      <p>Next.js full-stack, but exports and webhook deliveries are offloaded to a BullMQ job queue backed by Redis. Heavy exports run async, user gets a "ready" notification.</p>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Pros</h4><ul><li>Most robust for heavy/slow exports</li><li>Webhook retries built-in</li><li>Non-blocking UI during export</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Adds Redis dependency</li><li>Overkill for single-admin tool</li><li>Most complex setup of the three</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">⭐ I recommend <strong>Option A</strong> — for a single-admin internal tool, monolithic Next.js keeps the build fast and deployment simple. You can always extract the export pipeline later if load becomes an issue.</p>

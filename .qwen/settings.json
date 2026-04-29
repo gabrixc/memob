@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep *)",
+      "Bash(npx *)",
+      "Bash(psql *)",
+      "Bash(pg_isready *)",
+      "Bash(node *)",
+      "Bash(sudo *)",
+      "Bash(docker ps)",
+      "Bash(docker exec *)",
+      "Bash(curl *)",
+      "Bash(rm *)",
+      "Bash(mv *)"
+    ]
+  },
+  "$version": 3
+}
