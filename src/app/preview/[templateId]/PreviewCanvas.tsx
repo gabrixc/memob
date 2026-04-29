@@ -7,12 +7,13 @@ export default function PreviewCanvas({ canvasJson }: { canvasJson: object }) {
 
   useEffect(() => {
     if (!elRef.current) return
+    let disposed = false
     const canvas = new FabricCanvas(elRef.current, {
       width: 794, height: 1123, backgroundColor: '#ffffff',
       selection: false, interactive: false,
     })
-    canvas.loadFromJSON(canvasJson, () => canvas.renderAll())
-    return () => { canvas.dispose() }
+    canvas.loadFromJSON(canvasJson).then(() => { if (!disposed) canvas.renderAll() })
+    return () => { disposed = true; canvas.dispose() }
   }, [])
 
   return <canvas ref={elRef} />
