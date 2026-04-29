@@ -41,6 +41,7 @@ export default function Canvas({
   useEffect(() => {
     if (!containerRef.current) return
 
+    let disposed = false
     const canvasEl = document.createElement('canvas')
     containerRef.current.appendChild(canvasEl)
 
@@ -81,14 +82,14 @@ export default function Canvas({
           historyIdx.current--
           isApplyingHistory.current = true
           canvas.loadFromJSON(JSON.parse(historyStack.current[historyIdx.current]))
-            .then(() => { isApplyingHistory.current = false; canvas.renderAll() })
+            .then(() => { if (disposed) return; isApplyingHistory.current = false; canvas.renderAll() })
         },
         redo: () => {
           if (historyIdx.current >= historyStack.current.length - 1) return
           historyIdx.current++
           isApplyingHistory.current = true
           canvas.loadFromJSON(JSON.parse(historyStack.current[historyIdx.current]))
-            .then(() => { isApplyingHistory.current = false; canvas.renderAll() })
+            .then(() => { if (disposed) return; isApplyingHistory.current = false; canvas.renderAll() })
         },
         reset: () => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -111,6 +112,7 @@ export default function Canvas({
     canvas.on('selection:cleared', () => onSelectionChange?.([]))
 
     return () => {
+      disposed = true
       canvas.dispose()
       canvasEl.remove()
       canvasRef.current = null
