@@ -31,7 +31,7 @@ export default function ApplicantsClient() {
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Cari nama, NoKP atau perniagaan…"
-          className="w-72 border border-slate-300 rounded px-3 py-1.5 text-sm"
+          className="w-72 border border-slate-300 rounded px-3 py-1.5 text-sm text-slate-900 placeholder:text-slate-400"
         />
       </div>
       {loading ? (

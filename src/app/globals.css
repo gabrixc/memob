@@ -25,3 +25,9 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Style select dropdown options for better visibility */
+select option {
+  color: #1e293b; /* slate-800 - dark text for dropdown options */
+  background-color: #ffffff;
+}

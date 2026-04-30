@@ -35,7 +35,7 @@ export default function WebhookConfigForm() {
             <input value={cfg[key as keyof Config]}
               onChange={e => setCfg(c => ({ ...c, [key]: e.target.value }))}
               placeholder={placeholder}
-              className={`w-full border border-slate-300 rounded px-2 py-1 text-sm ${mono ? 'font-mono' : ''}`} />
+              className={`w-full border border-slate-300 rounded px-2 py-1 text-sm text-slate-900 placeholder:text-slate-400 ${mono ? 'font-mono' : ''}`} />
           </div>
         ))}
         <button type="submit"

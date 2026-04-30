@@ -15,7 +15,10 @@ export default async function ApplicantsPage() {
             <h1 className="text-2xl font-bold text-slate-900">Senarai Pemohon</h1>
             <p className="text-sm text-slate-500 mt-0.5">Rekod perniagaan yang berdaftar</p>
           </div>
-          <Link href="/applications" className="text-sm text-sky-600 hover:text-sky-700 font-medium">← Permohonan</Link>
+          <div className="flex items-center gap-3">
+            <Link href="/applications" className="text-sm text-slate-500 hover:text-slate-700">Permohonan</Link>
+            <Link href="/reports" className="text-sm text-slate-500 hover:text-slate-700">Laporan</Link>
+          </div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
           <ApplicantsClient />

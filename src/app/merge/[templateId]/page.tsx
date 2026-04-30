@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { decrypt } from '@/lib/encrypt'
 import { getRecords, runCustomQuery } from '@/lib/db/records'
+import { mergeSources } from '@/lib/data/mergeSources'
 import dynamic from 'next/dynamic'
 import MergeSourcePicker from './MergeSourcePicker'
 
@@ -18,7 +19,7 @@ export default async function MergePage({
   searchParams,
 }: {
   params: { templateId: string }
-  searchParams: { sourceId?: string; table?: string; query?: string; limit?: string; blocks?: string }
+  searchParams: { sourceId?: string; table?: string; query?: string; limit?: string; blocks?: string; dataBlockId?: string }
 }) {
   const session = await auth()
   if (!session) redirect('/login')
@@ -31,7 +32,80 @@ export default async function MergePage({
     ? (raw.pages as Record<string, unknown>[])
     : [raw]
 
-  // Multi-block merge mode
+  // Multi-source data block mode
+  if (searchParams.dataBlockId) {
+    const dataBlock = await prisma.dataBlock.findUnique({
+      where: { id: searchParams.dataBlockId },
+      include: {
+        primarySource: true,
+        secondarySources: true,
+      },
+    })
+
+    if (!dataBlock) {
+      return <div className="p-8 text-slate-500">Data block not found</div>
+    }
+
+    const limit = Math.min(parseInt(searchParams.limit ?? '100', 10) || 100, 500)
+
+    // Fetch primary source connection
+    const primarySource = await prisma.dataSource.findUnique({
+      where: { id: dataBlock.primarySource.sourceId },
+    })
+
+    if (!primarySource) {
+      return <div className="p-8 text-slate-500">Primary data source not found</div>
+    }
+
+    // Build merge options
+    const mergeOptions = {
+      primary: {
+        sourceId: dataBlock.primarySource.sourceId,
+        connectionUrl: decrypt(primarySource.connectionUrl),
+        type: dataBlock.primarySource.type as 'table' | 'query',
+        tableName: (dataBlock.primarySource as any).tableName ?? undefined,
+        query: dataBlock.primarySource.query ?? undefined,
+      },
+      secondary: await Promise.all(
+        dataBlock.secondarySources.map(async (sec) => {
+          const source = await prisma.dataSource.findUnique({
+            where: { id: sec.sourceId },
+          })
+          if (!source) {
+            throw new Error(`Secondary source ${sec.alias} not found`)
+          }
+          return {
+            alias: sec.alias,
+            sourceId: sec.sourceId,
+            connectionUrl: decrypt(source.connectionUrl),
+            type: sec.type as 'table' | 'query',
+            tableName: (sec as any).tableName ?? undefined,
+            query: sec.query ?? undefined,
+            joinKey: sec.joinKey,
+          }
+        })
+      ),
+    }
+
+    // Execute merge
+    const records = await mergeSources(mergeOptions, limit)
+
+    return (
+      <div style={{ background: '#94a3b8', minHeight: '100vh' }}>
+        <MergeClient
+          rawPages={rawPages}
+          records={records}
+          templateId={params.templateId}
+          templateName={template.name}
+          sourceId={dataBlock.primarySource.sourceId}
+          table={dataBlock.primarySource.table ?? ''}
+          dataBlockId={dataBlock.id}
+        />
+      </div>
+    )
+  }
+
+  // Multi-block merge mode (legacy)
   if (searchParams.blocks) {
     const blocks: DataBlock[] = JSON.parse(decodeURIComponent(searchParams.blocks))
     if (blocks.length === 0) {
@@ -77,6 +151,7 @@ export default async function MergePage({
     )
   }
 
+  // Single source mode (legacy)
   if (!searchParams.sourceId || (!searchParams.table && !searchParams.query)) {
     return (
       <div style={{ background: '#1e293b', minHeight: '100vh' }}>
@@ -95,8 +170,37 @@ export default async function MergePage({
   let records: Record<string, string>[] = []
 
   if (searchParams.query) {
-    records = await runCustomQuery(decrypt(source.connectionUrl), searchParams.query)
-  } else if (searchParams.table) {
+    // Fetch saved query by ID and run it
+    const savedQuery = await prisma.savedQuery.findUnique({
+      where: { id: searchParams.query },
+    })
+    if (savedQuery) {
+      records = await runCustomQuery(decrypt(source.connectionUrl), savedQuery.sql)
+      // Determine if we should use grouped mode (for non-pivoted queries)
+      // Grouped mode is enabled when query name starts with "REPORT -" (not "PIVOT -")
+      const isReportQuery = savedQuery.name.startsWith('REPORT -')
+      const groupedMode = isReportQuery
+      const groupByField = 'nama_perniagaan'
+
+      return (
+        <div style={{ background: '#94a3b8', minHeight: '100vh' }}>
+          <MergeClient
+            rawPages={rawPages}
+            records={records}
+            templateId={params.templateId}
+            templateName={template.name}
+            sourceId={searchParams.sourceId}
+            table={searchParams.table}
+            groupedMode={groupedMode}
+            groupByField={groupByField}
+          />
+        </div>
+      )
+    }
+  }
+  
+  // Table mode or no query - no grouping
+  if (searchParams.table) {
     records = await getRecords(decrypt(source.connectionUrl), searchParams.table, limit)
   }
 
@@ -109,6 +213,7 @@ export default async function MergePage({
         templateName={template.name}
         sourceId={searchParams.sourceId}
         table={searchParams.table}
+        groupedMode={false}
       />
     </div>
   )

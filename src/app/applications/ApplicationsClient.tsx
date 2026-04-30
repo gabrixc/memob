@@ -34,12 +34,12 @@ export default function ApplicationsClient() {
       {/* Filters */}
       <div className="flex items-center gap-3 mb-4">
         <select value={status} onChange={e => setStatus(e.target.value)}
-          className="border border-slate-300 rounded px-2 py-1.5 text-sm bg-white">
+          className="border border-slate-300 rounded px-2 py-1.5 text-sm bg-white text-slate-900">
           <option value="">Semua Status</option>
           {STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
         </select>
         <select value={type} onChange={e => setType(e.target.value)}
-          className="border border-slate-300 rounded px-2 py-1.5 text-sm bg-white">
+          className="border border-slate-300 rounded px-2 py-1.5 text-sm bg-white text-slate-900">
           <option value="">Semua Jenis</option>
           {TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
         </select>

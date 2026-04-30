@@ -14,6 +14,7 @@ model Template {
   createdAt  DateTime    @default(now()) @map("created_at")
   updatedAt  DateTime    @updatedAt @map("updated_at")
   exportJobs ExportJob[]
+
   @@map("templates")
 }
 
@@ -45,6 +46,7 @@ model WebhookConfig {
   outboundUrl    String?  @map("outbound_url")
   outboundSecret String?  @map("outbound_secret")
   outboundEvents String[] @map("outbound_events")
+
   @@map("webhook_configs")
 }
 
@@ -71,6 +73,7 @@ model ExportJob {
   triggeredBy String       @default("ui") @map("triggered_by")
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
+
   @@map("export_jobs")
 }
 
@@ -101,4 +104,44 @@ model LicenseApplication {
   updatedAt         DateTime         @updatedAt @map("updated_at")
 
   @@map("license_applications")
+}
+
+// Multi-source data block configuration for templates
+model DataBlock {
+  id               String            @id @default(uuid())
+  templateId       String            @map("template_id")
+  name             String            @map("name")
+  primarySourceId  String            @unique @map("primary_source_id")
+  primarySource    PrimarySource     @relation(fields: [primarySourceId], references: [id], onDelete: Cascade)
+  secondarySources SecondarySource[]
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  @@map("data_blocks")
+}
+
+model PrimarySource {
+  id          String     @id @default(uuid())
+  sourceId    String     @map("source_id")
+  type        String     @map("type") // "table" | "query"
+  tableName   String?    @map("table_name")
+  query       String?    @map("query")
+  dataBlockId String     @map("data_block_id")
+  dataBlock   DataBlock?
+
+  @@map("primary_sources")
+}
+
+model SecondarySource {
+  id          String    @id @default(uuid())
+  alias       String    @map("alias") // e.g., "check", "applicant"
+  sourceId    String    @map("source_id")
+  type        String    @map("type") // "table" | "query"
+  tableName   String?   @map("table_name")
+  query       String?   @map("query")
+  joinKey     String    @map("join_key") // field to match with primary (e.g., "nokp")
+  dataBlockId String    @map("data_block_id")
+  dataBlock   DataBlock @relation(fields: [dataBlockId], references: [id])
+
+  @@map("secondary_sources")
 }

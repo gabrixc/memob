@@ -86,7 +86,7 @@ export default function CustomQueryModal({ sourceId, onSaved, onClose }: CustomQ
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g. Active records by district"
-              className="w-full border border-slate-300 rounded px-2 py-1 text-xs"
+              className="w-full border border-slate-300 rounded px-2 py-1 text-xs text-slate-900 placeholder:text-slate-400"
             />
           </div>
           <div>
@@ -96,7 +96,7 @@ export default function CustomQueryModal({ sourceId, onSaved, onClose }: CustomQ
               onChange={e => setSql(e.target.value)}
               rows={6}
               placeholder={"SELECT * FROM get_records('approved', 'north')"}
-              className="w-full border border-slate-300 rounded px-2 py-1 text-xs font-mono resize-y"
+              className="w-full border border-slate-300 rounded px-2 py-1 text-xs font-mono resize-y text-slate-900 placeholder:text-slate-400"
             />
           </div>
           {error && <p className="text-red-500 text-xs">{error}</p>}

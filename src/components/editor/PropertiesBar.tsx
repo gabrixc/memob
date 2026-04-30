@@ -191,7 +191,7 @@ export default function PropertiesBar({ selected, selectedObjs, canvas, gridSize
   const btnBase  = 'w-6 h-6 flex items-center justify-center rounded text-sm shrink-0'
   const btnOff   = 'bg-slate-200 text-slate-600 hover:bg-slate-300'
   const btnOn    = 'bg-sky-500 text-white'
-  const numInput = 'border border-slate-300 rounded px-1 py-0.5 text-xs bg-white'
+  const numInput = 'border border-slate-300 rounded px-1 py-0.5 text-xs bg-white text-slate-900'
 
   return (
     <div className="h-8 bg-slate-100 border-b border-slate-200 flex items-center px-3 gap-3 text-xs text-slate-600 shrink-0 overflow-x-auto">

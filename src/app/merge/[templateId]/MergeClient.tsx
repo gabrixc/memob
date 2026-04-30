@@ -16,18 +16,48 @@ interface Props {
   templateName: string
   sourceId: string
   table?: string
+  groupedMode?: boolean
+  groupByField?: string
 }
 
 type FabricInstance = { getObjects: () => { data?: { type?: string }; top?: number; y1?: number }[] }
 
-export default function MergeClient({ rawPages, records, staticRecord, templateId, templateName, sourceId, table }: Props) {
+export default function MergeClient({ rawPages, records, staticRecord, templateId, templateName, sourceId, table, groupedMode = false, groupByField = 'nama_perniagaan' }: Props) {
+  const [groupIndex, setGroupIndex] = useState(0)
   const [recordIndex, setRecordIndex] = useState(0)
   const [showEmail, setShowEmail] = useState(false)
   const [isPrintingAll, setIsPrintingAll] = useState(false)
   const [printProgress, setPrintProgress] = useState('')
   const batchContainerRef = useRef<HTMLDivElement | null>(null)
 
-  const currentRecord = records[recordIndex] ?? {}
+  // Group records by field (e.g., nama_perniagaan)
+  const groupedRecords = groupedMode && groupByField ? (() => {
+    const groups = new Map<string, Record<string, string>[]>()
+    records.forEach(rec => {
+      const key = rec[groupByField] || 'Unknown'
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key)!.push(rec)
+    })
+    return Array.from(groups.entries()).map(([groupName, recs]) => ({
+      groupName,
+      records: recs,
+      // Number the records for pivoted-style placeholders
+      numberedRecords: recs.map((rec, i) => {
+        const numbered: Record<string, string> = { ...rec }
+        Object.keys(rec).forEach(key => {
+          numbered[`${key}_${i + 1}`] = rec[key]
+        })
+        numbered.total_records = recs.length.toString()
+        numbered[groupByField] = groupName
+        return numbered
+      })
+    }))
+  })() : null
+
+  const totalGroups = groupedRecords?.length ?? records.length
+  const currentGroup = groupedMode && groupedRecords ? groupedRecords[groupIndex] : null
+  const currentRecord = currentGroup?.numberedRecords[0] ?? (records[recordIndex] ?? {})
+  
   // Static record from secondary blocks; primary record takes precedence on conflicts
   const merged = staticRecord ? { ...staticRecord, ...currentRecord } : currentRecord
   const mergedPages = rawPages.map(p => substitutePlaceholders(p, merged))
@@ -67,7 +97,7 @@ export default function MergeClient({ rawPages, records, staticRecord, templateI
   // ── Print all records ───────────────────────────────────────────────────────
   const handlePrintAll = useCallback(async () => {
     setIsPrintingAll(true)
-    setPrintProgress(`0 / ${records.length}`)
+    setPrintProgress(`0 / ${totalGroups}`)
 
     // Hidden off-screen container for batch canvas rendering
     const container = document.createElement('div')
@@ -78,17 +108,36 @@ export default function MergeClient({ rawPages, records, staticRecord, templateI
     const allDataUrls: string[] = []
 
     try {
-      for (let i = 0; i < records.length; i++) {
-        const record = records[i]
-        const mergedRec = staticRecord ? { ...staticRecord, ...record } : record
-        const mergedForRecord = rawPages.map(p => substitutePlaceholders(p, mergedRec))
+      if (groupedMode && groupedRecords) {
+        // Grouped mode: one page per group (business)
+        for (let i = 0; i < groupedRecords.length; i++) {
+          const group = groupedRecords[i]
+          // Use first numbered record which has all fields numbered
+          const record = group.numberedRecords[0]
+          const mergedRec = staticRecord ? { ...staticRecord, ...record } : record
+          const mergedForGroup = rawPages.map(p => substitutePlaceholders(p, mergedRec))
 
-        for (const pageJson of mergedForRecord) {
-          const dataUrl = await renderPageToDataUrl(pageJson, container)
-          allDataUrls.push(dataUrl)
+          for (const pageJson of mergedForGroup) {
+            const dataUrl = await renderPageToDataUrl(pageJson, container)
+            allDataUrls.push(dataUrl)
+          }
+
+          setPrintProgress(`${i + 1} / ${groupedRecords.length}`)
         }
+      } else {
+        // Normal mode: one page per record
+        for (let i = 0; i < records.length; i++) {
+          const record = records[i]
+          const mergedRec = staticRecord ? { ...staticRecord, ...record } : record
+          const mergedForRecord = rawPages.map(p => substitutePlaceholders(p, mergedRec))
 
-        setPrintProgress(`${i + 1} / ${records.length}`)
+          for (const pageJson of mergedForRecord) {
+            const dataUrl = await renderPageToDataUrl(pageJson, container)
+            allDataUrls.push(dataUrl)
+          }
+
+          setPrintProgress(`${i + 1} / ${records.length}`)
+        }
       }
     } finally {
       document.body.removeChild(container)
@@ -99,16 +148,16 @@ export default function MergeClient({ rawPages, records, staticRecord, templateI
     setPrintProgress('')
 
     if (allDataUrls.length > 0) openPrintPopup(allDataUrls)
-  }, [records, rawPages])
+  }, [records, rawPages, groupedMode, groupedRecords, totalGroups, staticRecord])
 
   return (
     <>
       <MergeActionBar
         templateName={templateName}
-        recordIndex={recordIndex}
-        total={records.length}
-        onPrev={() => setRecordIndex(i => Math.max(0, i - 1))}
-        onNext={() => setRecordIndex(i => Math.min(records.length - 1, i + 1))}
+        recordIndex={groupedMode ? groupIndex : recordIndex}
+        total={totalGroups}
+        onPrev={() => groupedMode ? setGroupIndex(i => Math.max(0, i - 1)) : setRecordIndex(i => Math.max(0, i - 1))}
+        onNext={() => groupedMode ? setGroupIndex(i => Math.min(totalGroups - 1, i + 1)) : setRecordIndex(i => Math.min(records.length - 1, i + 1))}
         onPrintCurrent={handlePrintCurrent}
         onPrintAll={handlePrintAll}
         onToggleEmail={() => setShowEmail(v => !v)}

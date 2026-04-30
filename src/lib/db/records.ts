@@ -25,7 +25,10 @@ export async function runCustomQuery(
   sql: string
 ): Promise<Record<string, string>[]> {
   const trimmed = sql.trim()
-  if (!trimmed.toLowerCase().startsWith('select')) {
+  const lowerSql = trimmed.toLowerCase()
+  
+  // Allow SELECT queries and CTEs (WITH clause)
+  if (!lowerSql.startsWith('select') && !lowerSql.startsWith('with')) {
     throw new Error('Only SELECT queries are allowed')
   }
   if (trimmed.includes(';')) {

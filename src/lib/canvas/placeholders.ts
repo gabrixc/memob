@@ -1,4 +1,5 @@
-const RE = /\{\{(\w+)\}\}/g
+// Updated regex to support dot notation for aliased fields (e.g., {{check.status}})
+const RE = /\{\{([a-zA-Z_][\w.]*)\}\}/g
 
 export function extractPlaceholders(canvasJson: Record<string, unknown>): string[] {
   const found = new Set<string>()
@@ -11,6 +12,12 @@ export function substitutePlaceholders(
   record: Record<string, string>
 ): Record<string, unknown> {
   return JSON.parse(
-    JSON.stringify(canvasJson).replace(RE, (_, key) => record[key] ?? '')
+    JSON.stringify(canvasJson).replace(RE, (_, key) => {
+      // Try exact key match first (supports dot notation like "check.status")
+      if (key in record) {
+        return record[key] ?? ''
+      }
+      return ''
+    })
   )
 }

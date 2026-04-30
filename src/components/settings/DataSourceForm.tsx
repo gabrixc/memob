@@ -33,10 +33,10 @@ export default function DataSourceForm() {
       <form onSubmit={handleAdd} className="flex gap-2 mb-4">
         <input value={name} onChange={e => setName(e.target.value)}
           placeholder="Name" required
-          className="border border-slate-300 rounded px-2 py-1 text-sm w-28" />
+          className="border border-slate-300 rounded px-2 py-1 text-sm w-28 text-slate-900 placeholder:text-slate-400" />
         <input value={url} onChange={e => setUrl(e.target.value)}
           placeholder="postgresql://user:pass@host/db" required
-          className="border border-slate-300 rounded px-2 py-1 text-sm flex-1" />
+          className="border border-slate-300 rounded px-2 py-1 text-sm flex-1 text-slate-900 placeholder:text-slate-400" />
         <button type="submit"
           className="bg-sky-500 text-white rounded px-3 py-1 text-sm">Add</button>
       </form>

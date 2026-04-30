@@ -64,7 +64,7 @@ export default function EditApplicantClient({ id }: { id: string }) {
           <label className="block text-xs font-medium text-slate-600 mb-1">No. Telefon</label>
           <input value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)}
             placeholder="cth. 0123456789"
-            className="w-64 border border-slate-300 rounded px-3 py-2 text-sm" />
+            className="w-64 border border-slate-300 rounded px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400" />
         </div>
         <div className="flex items-center gap-3">
           <label className="text-sm text-slate-700">Status Perniagaan</label>

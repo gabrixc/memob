@@ -94,7 +94,7 @@ export default function NewApplicationClient() {
           onChange={e => setQuery(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSearch()}
           placeholder="Cari nama perniagaan, nama atau NoKP…"
-          className="flex-1 border border-slate-300 rounded px-3 py-2 text-sm"
+          className="flex-1 border border-slate-300 rounded px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400"
         />
         <button onClick={handleSearch} disabled={searching}
           className="bg-sky-600 text-white px-4 py-2 rounded text-sm hover:bg-sky-700 disabled:opacity-50">
@@ -154,12 +154,12 @@ export default function NewApplicationClient() {
           <label className="block text-xs font-medium text-slate-600 mb-1">Daerah / Majlis</label>
           <input value={district} onChange={e => setDistrict(e.target.value)}
             placeholder="cth. Majlis Perbandaran Batu Pahat"
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400" />
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Jenis Hiburan</label>
           <select value={entertainmentType} onChange={e => setEntertainmentType(e.target.value)}
-            className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white">
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-white text-slate-900">
             <option value="">-- Pilih jenis --</option>
             {TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
           </select>
@@ -182,10 +182,10 @@ export default function NewApplicationClient() {
         <div className="flex gap-2">
           <input value={docName} onChange={e => setDocName(e.target.value)}
             placeholder="Nama dokumen"
-            className="flex-1 border border-slate-300 rounded px-2 py-1.5 text-sm" />
+            className="flex-1 border border-slate-300 rounded px-2 py-1.5 text-sm text-slate-900 placeholder:text-slate-400" />
           <input value={docType} onChange={e => setDocType(e.target.value)}
             placeholder="Jenis"
-            className="w-32 border border-slate-300 rounded px-2 py-1.5 text-sm" />
+            className="w-32 border border-slate-300 rounded px-2 py-1.5 text-sm text-slate-900 placeholder:text-slate-400" />
           <button onClick={addDocument}
             className="border border-slate-300 rounded px-3 py-1.5 text-sm hover:bg-slate-50">+ Tambah</button>
         </div>

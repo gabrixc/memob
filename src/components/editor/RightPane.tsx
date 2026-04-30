@@ -110,7 +110,7 @@ export default function RightPane({ onFieldDrop, onRecordChange, onSourceTableCh
       </div>
       <div className="px-2 py-1 border-b border-slate-200">
         <select value={sourceId} onChange={e => setSourceId(e.target.value)}
-          className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white">
+          className="w-full border border-slate-300 rounded px-1 py-0.5 text-xs bg-white text-slate-900">
           <option value="">Select data source…</option>
           {sources.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
@@ -141,7 +141,7 @@ export default function RightPane({ onFieldDrop, onRecordChange, onSourceTableCh
       <div className="px-2 py-1 border-b border-slate-200">
         <input value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Search fields…"
-          className="w-full border border-slate-300 rounded px-2 py-0.5 text-xs" />
+          className="w-full border border-slate-300 rounded px-2 py-0.5 text-xs text-slate-900 placeholder:text-slate-400" />
       </div>
       <div className="flex-1 overflow-y-auto">
         {filtered.map(({ table, columns }) => {
@@ -181,7 +181,7 @@ export default function RightPane({ onFieldDrop, onRecordChange, onSourceTableCh
             <div className="font-semibold text-slate-500 mb-1">Active Record</div>
             <div className="text-sky-600 truncate text-[10px]">{Object.values(activeRecord)[0]}</div>
             {records.length > 1 && (
-              <select className="mt-1 w-full border border-slate-300 rounded px-1 py-0.5 text-[10px] bg-white"
+              <select className="mt-1 w-full border border-slate-300 rounded px-1 py-0.5 text-[10px] bg-white text-slate-900"
                 onChange={e => {
                   const rec = records[Number(e.target.value)]
                   setActiveRecord(rec); onRecordChange(rec)
