@@ -8,7 +8,9 @@ export async function getRecords(
   try {
     // Sanitize table name - only allow alphanumeric, underscore, and hyphen
     const sanitizedTable = table.replace(/[^a-zA-Z0-9_-]/g, '')
-    const { rows } = await client.query(`SELECT * FROM "${sanitizedTable}" LIMIT $1`, [limit])
+    if (!sanitizedTable) throw new Error('Invalid table name')
+    const safedLimit = Math.min(Math.max(1, limit), 1000)
+    const { rows } = await client.query(`SELECT * FROM "${sanitizedTable}" LIMIT $1`, [safedLimit])
     return rows.map(row =>
       Object.fromEntries(Object.entries(row).map(([k, v]) => [k, String(v ?? '')]))
     )

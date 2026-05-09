@@ -74,7 +74,7 @@ export async function POST(
   } catch (err) {
     console.error('Merge error:', err)
     return NextResponse.json(
-      { error: 'Failed to merge sources', details: String(err) },
+      { error: 'Failed to merge sources' },
       { status: 500 }
     )
   }
