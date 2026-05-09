@@ -1,5 +1,7 @@
 import crypto from 'crypto'
 import dns from 'dns'
+import http from 'http'
+import https from 'https'
 import net from 'net'
 
 interface WebhookConfig { outboundUrl: string | null; outboundSecret: string | null }
@@ -26,7 +28,11 @@ function isPrivateIP(addr: string): boolean {
   )
 }
 
-async function assertSafeUrl(rawUrl: string): Promise<void> {
+// Validates the URL and resolves the hostname to the IP we will pin to.
+// For IP literals, pinnedIP equals the literal itself (no re-resolution risk).
+async function resolveAndCheck(
+  rawUrl: string
+): Promise<{ parsed: URL; hostname: string; pinnedIP: string }> {
   let parsed: URL
   try {
     parsed = new URL(rawUrl)
@@ -43,7 +49,7 @@ async function assertSafeUrl(rawUrl: string): Promise<void> {
 
   if (net.isIPv4(hostname) || net.isIPv6(hostname)) {
     if (isPrivateIP(hostname)) throw new Error('Webhook URL targets a private/reserved address')
-    return
+    return { parsed, hostname, pinnedIP: hostname }
   }
 
   // Resolve all addresses to guard against rebinding via short TTLs
@@ -51,6 +57,48 @@ async function assertSafeUrl(rawUrl: string): Promise<void> {
   for (const { address } of results) {
     if (isPrivateIP(address)) throw new Error('Webhook URL resolves to a private/reserved address')
   }
+
+  return { parsed, hostname, pinnedIP: results[0].address }
+}
+
+// Sends the request to pinnedIP directly, avoiding any re-resolution by the runtime.
+// Sets the Host header and TLS SNI to the original hostname so the server and
+// certificate validation see the correct identity.
+// http/https.request does not follow redirects automatically; 3xx is returned as-is.
+function sendPinned(
+  parsed: URL,
+  hostname: string,
+  pinnedIP: string,
+  reqHeaders: Record<string, string>,
+  body: string
+): Promise<number> {
+  return new Promise((resolve, reject) => {
+    // Re-check at socket-creation time to close the TOCTOU window
+    if (isPrivateIP(pinnedIP)) {
+      reject(new Error('Webhook target resolved to a private/reserved address'))
+      return
+    }
+    const isHttps = parsed.protocol === 'https:'
+    const port = parsed.port ? Number(parsed.port) : (isHttps ? 443 : 80)
+    const mod = isHttps ? https : http
+    const req = mod.request(
+      {
+        hostname: pinnedIP,
+        port,
+        path: parsed.pathname + parsed.search,
+        method: 'POST',
+        headers: { ...reqHeaders, Host: hostname },
+        ...(isHttps && { servername: hostname }),  // SNI → cert validates against hostname
+      },
+      (res) => {
+        res.resume()  // drain body to free the socket
+        resolve(res.statusCode ?? 0)
+      }
+    )
+    req.on('error', reject)
+    req.write(body)
+    req.end()
+  })
 }
 
 export async function deliverWebhook(
@@ -58,12 +106,15 @@ export async function deliverWebhook(
   payload: Record<string, unknown>
 ): Promise<void> {
   if (!config.outboundUrl) return
-  await assertSafeUrl(config.outboundUrl)
+  const { parsed, hostname, pinnedIP } = await resolveAndCheck(config.outboundUrl)
   const body = JSON.stringify(payload)
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (config.outboundSecret) {
     headers['X-MemoBuilder-Signature'] =
       'sha256=' + crypto.createHmac('sha256', config.outboundSecret).update(body).digest('hex')
   }
-  await fetch(config.outboundUrl, { method: 'POST', headers, body })
+  const status = await sendPinned(parsed, hostname, pinnedIP, headers, body)
+  if (status >= 300 && status < 400) {
+    throw new Error(`Webhook delivery rejected redirect (${status}) from ${config.outboundUrl}`)
+  }
 }
