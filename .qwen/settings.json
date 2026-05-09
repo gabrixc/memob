@@ -12,7 +12,12 @@
       "Bash(curl *)",
       "Bash(rm *)",
       "Bash(mv *)",
-      "Bash(source *)"
+      "Bash(source *)",
+      "Bash(/home/faizalamat/.local/share/uv/tools/graphifyy/bin/python *)",
+      "Bash(mkdir *)",
+      "Bash(/graphify *)",
+      "Bash(python3 *)",
+      "Bash(ls *)"
     ]
   },
   "$version": 3

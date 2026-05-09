@@ -9,14 +9,13 @@ interface TopBarProps {
   onSave: () => void
   onPreview: () => void
   onMerge: () => void
-  onExport: (format: 'pdf' | 'image' | 'word') => void
   onUndo?: () => void
   onRedo?: () => void
 }
 
 export default function TopBar({
   templateName, onTemplateNameChange,
-  onSave, onPreview, onMerge, onExport, onUndo, onRedo,
+  onSave, onPreview, onMerge, onUndo, onRedo,
 }: TopBarProps) {
   const [editing, setEditing] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -86,19 +85,6 @@ export default function TopBar({
           className="bg-violet-500 hover:bg-violet-600 text-white px-3 py-1 rounded text-xs">
           Merge
         </button>
-        <div className="relative group">
-          <button className="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-xs">
-            Export ▾
-          </button>
-          <div className="hidden group-hover:flex flex-col absolute right-0 top-7 bg-white border border-slate-200 rounded shadow-lg z-50 min-w-28">
-            {(['pdf', 'image', 'word'] as const).map(f => (
-              <button key={f} onClick={() => onExport(f)}
-                className="px-4 py-2 text-xs text-slate-700 hover:bg-slate-100 text-left">
-                {f === 'image' ? 'Image (PNG)' : f.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
         <Link href="/templates"
           className="text-slate-400 hover:text-white text-xs px-2">
           Templates

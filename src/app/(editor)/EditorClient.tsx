@@ -214,20 +214,6 @@ export default function EditorClient() {
     window.open(`/merge/${templateId}${params}`, '_blank')
   }
 
-  async function handleExport(format: 'pdf' | 'image' | 'word') {
-    const canvas = fabricRef.current
-    if (!canvas || !templateId) { alert('Save the template first'); return }
-    let canvasDataUrl: string | undefined
-    if (format === 'image') canvasDataUrl = canvas.toDataURL({ format: 'png', multiplier: 1 })
-    const res = await fetch('/api/export', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ templateId, format, canvasDataUrl }),
-    })
-    const { downloadUrl } = await res.json()
-    window.open(downloadUrl, '_blank')
-  }
-
   function handleCopy() { clipboard.current = fabricRef.current?.getActiveObject() ?? null }
   function handleCut() {
     const canvas = fabricRef.current
@@ -309,7 +295,6 @@ export default function EditorClient() {
         onSave={handleSave}
         onPreview={handlePreview}
         onMerge={handleMerge}
-        onExport={handleExport}
         onUndo={() => historyRef.current?.undo()}
         onRedo={() => historyRef.current?.redo()}
       />
