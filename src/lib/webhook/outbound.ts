@@ -6,11 +6,31 @@ import net from 'net'
 
 interface WebhookConfig { outboundUrl: string | null; outboundSecret: string | null }
 
+// Expands the :: shorthand in an IPv6 address to its full 8-group form.
+// Only called on addresses that don't contain dotted-quad suffixes.
+function expandIPv6(addr: string): string {
+  if (!addr.includes('::')) return addr
+  const [left, right] = addr.split('::')
+  const leftGroups = left ? left.split(':') : []
+  const rightGroups = right ? right.split(':') : []
+  const middle = Array(8 - leftGroups.length - rightGroups.length).fill('0')
+  return [...leftGroups, ...middle, ...rightGroups].join(':')
+}
+
 function isPrivateIP(addr: string): boolean {
-  // Unwrap IPv4-mapped IPv6 (::ffff:a.b.c.d) and recurse
   if (net.isIPv6(addr)) {
-    const v4mapped = addr.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i)
-    if (v4mapped) return isPrivateIP(v4mapped[1])
+    // Dotted-quad form: ::ffff:a.b.c.d
+    const v4dotted = addr.match(/^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i)
+    if (v4dotted) return isPrivateIP(v4dotted[1])
+
+    // Hex form: ::ffff:xxxx:xxxx or 0:0:0:0:0:ffff:xxxx:xxxx — expand then check
+    const expanded = expandIPv6(addr)
+    const v4hex = expanded.match(/^(?:0{1,4}:){5}ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i)
+    if (v4hex) {
+      const h = parseInt(v4hex[1], 16), l = parseInt(v4hex[2], 16)
+      return isPrivateIP(`${(h >> 8) & 0xff}.${h & 0xff}.${(l >> 8) & 0xff}.${l & 0xff}`)
+    }
+
     if (addr === '::1') return true                         // loopback
     if (/^fe[89ab][0-9a-f]:/i.test(addr)) return true      // fe80::/10 link-local
     if (/^f[cd][0-9a-f]{2}:/i.test(addr)) return true      // fc00::/7 unique-local
@@ -31,11 +51,11 @@ function isPrivateIP(addr: string): boolean {
   )
 }
 
-// Validates the URL and resolves the hostname to the IP we will pin to.
-// For IP literals, pinnedIP equals the literal itself (no re-resolution risk).
+// Validates the URL and resolves the hostname to all IPs we may pin to.
+// For IP literals, pinnedIPs contains the literal itself (no re-resolution risk).
 async function resolveAndCheck(
   rawUrl: string
-): Promise<{ parsed: URL; hostname: string; pinnedIP: string }> {
+): Promise<{ parsed: URL; hostname: string; pinnedIPs: string[] }> {
   let parsed: URL
   try {
     parsed = new URL(rawUrl)
@@ -52,25 +72,24 @@ async function resolveAndCheck(
 
   if (net.isIPv4(hostname) || net.isIPv6(hostname)) {
     if (isPrivateIP(hostname)) throw new Error('Webhook URL targets a private/reserved address')
-    return { parsed, hostname, pinnedIP: hostname }
+    return { parsed, hostname, pinnedIPs: [hostname] }
   }
 
   // Resolve all addresses to guard against rebinding via short TTLs
   const results = await dns.promises.lookup(hostname, { all: true })
+  const validatedIPs: string[] = []
   for (const { address } of results) {
     if (isPrivateIP(address)) throw new Error('Webhook URL resolves to a private/reserved address')
+    validatedIPs.push(address)
   }
 
-  return { parsed, hostname, pinnedIP: results[0].address }
+  return { parsed, hostname, pinnedIPs: validatedIPs }
 }
 
 const REQUEST_TIMEOUT_MS = 10_000
 
-// Sends the request to pinnedIP directly, avoiding any re-resolution by the runtime.
-// Sets the Host header and TLS SNI to the original hostname so the server and
-// certificate validation see the correct identity.
-// http/https.request does not follow redirects automatically; 3xx is returned as-is.
-function sendPinned(
+// Attempts the POST to a single pinned IP; resolves with the HTTP status code.
+function tryOneIP(
   parsed: URL,
   hostname: string,
   pinnedIP: string,
@@ -90,7 +109,11 @@ function sendPinned(
     const done = (err: Error | null, status?: number) => {
       if (settled) return
       settled = true
-      err ? reject(err) : resolve(status!)
+      if (err) {
+        reject(err)
+      } else {
+        resolve(status!)
+      }
     }
     const req = mod.request(
       {
@@ -98,8 +121,8 @@ function sendPinned(
         port,
         path: parsed.pathname + parsed.search,
         method: 'POST',
-        headers: { ...reqHeaders, Host: hostname },
-        ...(isHttps && { servername: hostname }),  // SNI → cert validates against hostname
+        headers: { ...reqHeaders, Host: parsed.host },  // preserve port and IPv6 brackets
+        ...(isHttps && { servername: hostname }),        // SNI → cert validates against hostname
       },
       (res) => {
         res.resume()  // drain body to free the socket
@@ -115,19 +138,40 @@ function sendPinned(
   })
 }
 
+// Sends the request to pinnedIPs directly, avoiding any re-resolution by the runtime.
+// Retries across all validated addresses on connection failure.
+// http/https.request does not follow redirects automatically; 3xx is returned as-is.
+async function sendPinned(
+  parsed: URL,
+  hostname: string,
+  pinnedIPs: string[],
+  reqHeaders: Record<string, string>,
+  body: string
+): Promise<number> {
+  let lastErr: Error | undefined
+  for (const ip of pinnedIPs) {
+    try {
+      return await tryOneIP(parsed, hostname, ip, reqHeaders, body)
+    } catch (err) {
+      lastErr = err as Error
+    }
+  }
+  throw lastErr ?? new Error('Webhook: no reachable addresses')
+}
+
 export async function deliverWebhook(
   config: WebhookConfig,
   payload: Record<string, unknown>
 ): Promise<void> {
   if (!config.outboundUrl) return
-  const { parsed, hostname, pinnedIP } = await resolveAndCheck(config.outboundUrl)
+  const { parsed, hostname, pinnedIPs } = await resolveAndCheck(config.outboundUrl)
   const body = JSON.stringify(payload)
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (config.outboundSecret) {
     headers['X-MemoBuilder-Signature'] =
       'sha256=' + crypto.createHmac('sha256', config.outboundSecret).update(body).digest('hex')
   }
-  const status = await sendPinned(parsed, hostname, pinnedIP, headers, body)
+  const status = await sendPinned(parsed, hostname, pinnedIPs, headers, body)
   if (status >= 300 && status < 400) {
     throw new Error(`Webhook delivery rejected redirect (${status}) from ${config.outboundUrl}`)
   }
