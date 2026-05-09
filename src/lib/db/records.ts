@@ -6,9 +6,10 @@ export async function getRecords(
   const client = new Client({ connectionString: connectionUrl })
   await client.connect()
   try {
-    // Sanitize table name - only allow alphanumeric, underscore, and hyphen
-    const sanitizedTable = table.replace(/[^a-zA-Z0-9_-]/g, '')
-    const { rows } = await client.query(`SELECT * FROM "${sanitizedTable}" LIMIT $1`, [limit])
+    if (!/^[A-Za-z0-9_-]+$/.test(table)) throw new Error('Invalid table name')
+    const normalized = Math.floor(Number(limit))
+    const safedLimit = Number.isFinite(normalized) ? Math.min(Math.max(normalized, 1), 1000) : 1
+    const { rows } = await client.query(`SELECT * FROM "${table}" LIMIT $1`, [safedLimit])
     return rows.map(row =>
       Object.fromEntries(Object.entries(row).map(([k, v]) => [k, String(v ?? '')]))
     )
