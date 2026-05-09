@@ -14,6 +14,7 @@ function isPrivateIP(addr: string): boolean {
     if (addr === '::1') return true                         // loopback
     if (/^fe[89ab][0-9a-f]:/i.test(addr)) return true      // fe80::/10 link-local
     if (/^f[cd][0-9a-f]{2}:/i.test(addr)) return true      // fc00::/7 unique-local
+    if (/^2001:db8:/i.test(addr)) return true               // documentation prefix
     return false
   }
   const parts = addr.split('.').map(Number)
@@ -22,6 +23,8 @@ function isPrivateIP(addr: string): boolean {
     a === 127 ||                               // loopback
     a === 10 ||                                // RFC 1918
     a === 0 ||                                 // unspecified
+    addr === '255.255.255.255' ||              // broadcast
+    (a === 100 && b >= 64 && b <= 127) ||      // RFC 6598 CGN
     (a === 172 && b >= 16 && b <= 31) ||       // RFC 1918
     (a === 192 && b === 168) ||                // RFC 1918
     (a === 169 && b === 254)                   // link-local / cloud metadata
@@ -61,6 +64,8 @@ async function resolveAndCheck(
   return { parsed, hostname, pinnedIP: results[0].address }
 }
 
+const REQUEST_TIMEOUT_MS = 10_000
+
 // Sends the request to pinnedIP directly, avoiding any re-resolution by the runtime.
 // Sets the Host header and TLS SNI to the original hostname so the server and
 // certificate validation see the correct identity.
@@ -81,6 +86,12 @@ function sendPinned(
     const isHttps = parsed.protocol === 'https:'
     const port = parsed.port ? Number(parsed.port) : (isHttps ? 443 : 80)
     const mod = isHttps ? https : http
+    let settled = false
+    const done = (err: Error | null, status?: number) => {
+      if (settled) return
+      settled = true
+      err ? reject(err) : resolve(status!)
+    }
     const req = mod.request(
       {
         hostname: pinnedIP,
@@ -92,10 +103,13 @@ function sendPinned(
       },
       (res) => {
         res.resume()  // drain body to free the socket
-        resolve(res.statusCode ?? 0)
+        done(null, res.statusCode ?? 0)
       }
     )
-    req.on('error', reject)
+    req.setTimeout(REQUEST_TIMEOUT_MS, () => {
+      req.destroy(new Error(`Webhook request timed out after ${REQUEST_TIMEOUT_MS}ms`))
+    })
+    req.on('error', (err) => done(err))
     req.write(body)
     req.end()
   })
